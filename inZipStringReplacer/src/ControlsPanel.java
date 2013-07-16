@@ -28,6 +28,7 @@ import java.io.File;
 import java.util.HashMap;
 import java.util.List;
 import javax.swing.JCheckBox;
+import javax.swing.JSeparator;
 
 /**
  * 
@@ -58,11 +59,13 @@ public class ControlsPanel extends JPanel implements ActionListener {
 	private JCheckBox chckbxIgnoreFileActive;
 	private FileOptions myOptions;
 	public static HashMap<String, Boolean> optionsMap = new HashMap<String, Boolean>();
-	private JButton btnFileTypes;
 	private JCheckBox chckbxTxt;
 	private JCheckBox chckbxHTML;
 	public boolean fileTypeClick = false;
 	private JPanel checkPanel;
+	private JLabel lblFileTypeLabel;
+	private JSeparator separator;
+	private JSeparator separator_1;
 
 	/**
 	 * Create the panel that holds all components
@@ -72,11 +75,11 @@ public class ControlsPanel extends JPanel implements ActionListener {
 		setBackground(new Color(255, 255, 255));
 		GridBagLayout gridBagLayout = new GridBagLayout();
 		gridBagLayout.columnWidths = new int[] { 0, 311, 197, 0 };
-		gridBagLayout.rowHeights = new int[] { 23, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-				0 };
+		gridBagLayout.rowHeights = new int[] { 23, 0, 0, 0, 0, 0, 31, 0, 0, 0, 0, 0,
+				0, 0 };
 		gridBagLayout.columnWeights = new double[] { 0.0, 1.0, 1.0,
 				Double.MIN_VALUE };
-		gridBagLayout.rowWeights = new double[] { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+		gridBagLayout.rowWeights = new double[] { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
 				0.0, 0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE };
 		setLayout(gridBagLayout);
 		setFont(new Font("Arial", Font.PLAIN, 12));
@@ -276,6 +279,67 @@ public class ControlsPanel extends JPanel implements ActionListener {
 		gbc_button.gridx = 2;
 		gbc_button.gridy = 4;
 		add(button, gbc_button);
+		
+		separator = new JSeparator();
+		separator.setBackground(Color.GRAY);
+		GridBagConstraints gbc_separator = new GridBagConstraints();
+		gbc_separator.gridwidth = 2;
+		gbc_separator.insets = new Insets(0, 0, 5, 0);
+		gbc_separator.gridx = 1;
+		gbc_separator.gridy = 5;
+		add(separator, gbc_separator);
+
+		checkPanel = new JPanel();
+		checkPanel.setBackground(Color.WHITE);
+		GridBagConstraints gbc_checkPanel = new GridBagConstraints();
+		gbc_checkPanel.anchor = GridBagConstraints.WEST;
+		gbc_checkPanel.insets = new Insets(0, 0, 5, 5);
+		gbc_checkPanel.fill = GridBagConstraints.VERTICAL;
+		gbc_checkPanel.gridx = 1;
+		gbc_checkPanel.gridy = 6;
+		add(checkPanel, gbc_checkPanel);
+		GridBagLayout gbl_checkPanel = new GridBagLayout();
+		gbl_checkPanel.columnWidths = new int[]{46, 45, 39, 0};
+		gbl_checkPanel.rowHeights = new int[]{23, 0};
+		gbl_checkPanel.columnWeights = new double[]{0.0, 0.0, 0.0, Double.MIN_VALUE};
+		gbl_checkPanel.rowWeights = new double[]{0.0, Double.MIN_VALUE};
+		checkPanel.setLayout(gbl_checkPanel);
+						
+						lblFileTypeLabel = new JLabel("File Types");
+						GridBagConstraints gbc_lblFileTypeLabel = new GridBagConstraints();
+						gbc_lblFileTypeLabel.anchor = GridBagConstraints.WEST;
+						gbc_lblFileTypeLabel.insets = new Insets(0, 0, 0, 5);
+						gbc_lblFileTypeLabel.gridx = 0;
+						gbc_lblFileTypeLabel.gridy = 0;
+						checkPanel.add(lblFileTypeLabel, gbc_lblFileTypeLabel);
+				
+						chckbxHTML = new JCheckBox("html");
+						GridBagConstraints gbc_chckbxHTML = new GridBagConstraints();
+						gbc_chckbxHTML.anchor = GridBagConstraints.NORTHWEST;
+						gbc_chckbxHTML.insets = new Insets(0, 0, 0, 5);
+						gbc_chckbxHTML.gridx = 1;
+						gbc_chckbxHTML.gridy = 0;
+						checkPanel.add(chckbxHTML, gbc_chckbxHTML);
+						
+								chckbxHTML.setBackground(Color.WHITE);
+								chckbxHTML.setSelected(true);
+		
+				chckbxTxt = new JCheckBox("txt");
+				GridBagConstraints gbc_chckbxTxt = new GridBagConstraints();
+				gbc_chckbxTxt.anchor = GridBagConstraints.NORTHWEST;
+				gbc_chckbxTxt.gridx = 2;
+				gbc_chckbxTxt.gridy = 0;
+				checkPanel.add(chckbxTxt, gbc_chckbxTxt);
+				chckbxTxt.setSelected(true);
+				chckbxTxt.setBackground(Color.WHITE);
+		
+		separator_1 = new JSeparator();
+		GridBagConstraints gbc_separator_1 = new GridBagConstraints();
+		gbc_separator_1.gridwidth = 2;
+		gbc_separator_1.insets = new Insets(0, 0, 5, 5);
+		gbc_separator_1.gridx = 1;
+		gbc_separator_1.gridy = 7;
+		add(separator_1, gbc_separator_1);
 
 		chckbxOpenFileDirectory = new JCheckBox(
 				"Open File Directory after process");
@@ -286,7 +350,7 @@ public class ControlsPanel extends JPanel implements ActionListener {
 		gbc_chckbxOpenFileDirectory.anchor = GridBagConstraints.WEST;
 		gbc_chckbxOpenFileDirectory.insets = new Insets(0, 0, 5, 5);
 		gbc_chckbxOpenFileDirectory.gridx = 1;
-		gbc_chckbxOpenFileDirectory.gridy = 5;
+		gbc_chckbxOpenFileDirectory.gridy = 8;
 		add(chckbxOpenFileDirectory, gbc_chckbxOpenFileDirectory);
 
 		chckbxIgnoreFileActive = new JCheckBox("Import Ignore File Enabled");
@@ -296,7 +360,7 @@ public class ControlsPanel extends JPanel implements ActionListener {
 		gbc_chckbxIgnoreFileActive.anchor = GridBagConstraints.WEST;
 		gbc_chckbxIgnoreFileActive.insets = new Insets(0, 0, 5, 5);
 		gbc_chckbxIgnoreFileActive.gridx = 1;
-		gbc_chckbxIgnoreFileActive.gridy = 6;
+		gbc_chckbxIgnoreFileActive.gridy = 9;
 		add(chckbxIgnoreFileActive, gbc_chckbxIgnoreFileActive);
 		chckbxIgnoreFileActive.addMouseListener(new MouseAdapter() {
 			public void mouseClicked(MouseEvent e) {
@@ -310,60 +374,18 @@ public class ControlsPanel extends JPanel implements ActionListener {
 			}
 
 		});
-		btnFileTypes = new JButton("File Types");
-		btnFileTypes.setBackground(Color.LIGHT_GRAY);
-		GridBagConstraints gbc_btnFileTypes = new GridBagConstraints();
-		gbc_btnFileTypes.insets = new Insets(0, 0, 5, 0);
-		gbc_btnFileTypes.gridx = 2;
-		gbc_btnFileTypes.gridy = 6;
-		add(btnFileTypes, gbc_btnFileTypes);
-
-		checkPanel = new JPanel();
-		checkPanel.setBackground(Color.WHITE);
-		checkPanel.setVisible(false);
-		GridBagConstraints gbc_checkPanel = new GridBagConstraints();
-		gbc_checkPanel.insets = new Insets(0, 0, 5, 0);
-		gbc_checkPanel.fill = GridBagConstraints.BOTH;
-		gbc_checkPanel.gridx = 2;
-		gbc_checkPanel.gridy = 7;
-		add(checkPanel, gbc_checkPanel);
-
-		chckbxHTML = new JCheckBox("html");
-		checkPanel.add(chckbxHTML);
-
-		chckbxHTML.setBackground(Color.WHITE);
-		chckbxHTML.setSelected(true);
-
-		chckbxTxt = new JCheckBox("txt");
-		checkPanel.add(chckbxTxt);
-		chckbxTxt.setSelected(true);
-		chckbxTxt.setBackground(Color.WHITE);
 		GridBagConstraints gbc_btnFindButton = new GridBagConstraints();
 		gbc_btnFindButton.insets = new Insets(0, 0, 5, 0);
 		gbc_btnFindButton.gridwidth = 2;
 		gbc_btnFindButton.gridx = 1;
-		gbc_btnFindButton.gridy = 8;
+		gbc_btnFindButton.gridy = 10;
 		add(btnFindButton, gbc_btnFindButton);
-		btnFileTypes.addActionListener(new ActionListener() {
-
-			@Override
-			public void actionPerformed(ActionEvent arg0) {
-				if (fileTypeClick) {
-					fileTypeClick = false;
-					checkPanel.setVisible(false);
-				} else {
-					fileTypeClick = true;
-					checkPanel.setVisible(true);
-
-				}
-			}
-
-		});
-		errorLabel = new JLabel("No Errors");
+		errorLabel = new JLabel("----------");
 		GridBagConstraints gbc_errorLabel = new GridBagConstraints();
+		gbc_errorLabel.insets = new Insets(0, 0, 5, 0);
 		gbc_errorLabel.gridwidth = 2;
 		gbc_errorLabel.gridx = 1;
-		gbc_errorLabel.gridy = 10;
+		gbc_errorLabel.gridy = 11;
 		add(errorLabel, gbc_errorLabel);
 
 	}
@@ -411,12 +433,13 @@ public class ControlsPanel extends JPanel implements ActionListener {
 
 		}
 	}
-	public void setMap(){
-		if(chckbxHTML.isSelected())
+
+	public void setMap() {
+		if (chckbxHTML.isSelected())
 			optionsMap.put("html", true);
 		else
 			optionsMap.put("html", false);
-		if(chckbxTxt.isSelected())
+		if (chckbxTxt.isSelected())
 			optionsMap.put("txt", true);
 		else
 			optionsMap.put("txt", false);

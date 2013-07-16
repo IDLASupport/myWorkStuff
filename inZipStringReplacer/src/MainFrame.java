@@ -17,7 +17,7 @@ import java.awt.Color;
  */
 public class MainFrame extends JFrame {
 	private static final long serialVersionUID = 1L;
-	private static final String VERSION_NAME = "0.5";
+	private static final String VERSION_NAME = "0.5_01";
 	private JPanel contentPane;
 	private ControlsPanel myPanel;
 	/**
@@ -56,7 +56,7 @@ public class MainFrame extends JFrame {
 		lblVersion.setForeground(Color.GRAY);
 		GridBagConstraints gbc_lblVersion = new GridBagConstraints();
 		gbc_lblVersion.gridx = 2;
-		gbc_lblVersion.gridy = 10;
+		gbc_lblVersion.gridy = 11;
 		myPanel.add(lblVersion, gbc_lblVersion);
 	}
 
