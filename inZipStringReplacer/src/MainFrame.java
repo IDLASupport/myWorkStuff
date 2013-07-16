@@ -55,8 +55,8 @@ public class MainFrame extends JFrame {
 		JLabel lblVersion = new JLabel("Version "+ VERSION_NAME);
 		lblVersion.setForeground(Color.GRAY);
 		GridBagConstraints gbc_lblVersion = new GridBagConstraints();
-		gbc_lblVersion.gridx = 2;
-		gbc_lblVersion.gridy = 11;
+		gbc_lblVersion.gridx = 0;
+		gbc_lblVersion.gridy = 12;
 		myPanel.add(lblVersion, gbc_lblVersion);
 	}
 
