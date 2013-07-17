@@ -24,7 +24,23 @@ import java.util.LinkedList;
 import java.util.Scanner;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.stream.XMLOutputFactory;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+
 import org.apache.commons.io.FileUtils;
+import org.w3c.dom.Document;
+import org.w3c.dom.NamedNodeMap;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 
 /**
  * 
@@ -34,6 +50,7 @@ import org.apache.commons.io.FileUtils;
 public class FindAndReplaceString {
 	private String destinationFilePath;
 	private ArrayList<String> noTouchList = new ArrayList<String>();
+
 	/**
 	 * Constructor to build a new FindAndReplacString Class runs different
 	 * processes that extract, redo files, and recompress
@@ -114,9 +131,13 @@ public class FindAndReplaceString {
 	 *            String that replaces the findThis String
 	 * @throws IOException
 	 *             when file is not found
+	 * @throws ParserConfigurationException
+	 * @throws SAXException
+	 * @throws TransformerException
 	 */
 	public void findAndReplace(String findThis, String replaceWithThis)
-			throws IOException {
+			throws IOException, ParserConfigurationException, SAXException,
+			TransformerException {
 		ArrayList<Path> myPaths = new ArrayList<Path>();
 		Path myPath = Paths.get(destinationFilePath);
 
@@ -130,39 +151,203 @@ public class FindAndReplaceString {
 		BufferedReader br = null;
 		PrintWriter out = null;
 		for (int i = 0; i < myPaths.size(); i++) {
-			File currentPath = new File(myPaths.get(i).toString());
-			File newFile = new File(removeFileFormat(currentPath.getPath()));
-			try {
+			if ((myPaths.get(i).toString()
+					.substring(myPaths.get(i).toString().length() - 4)
+					.equals(".xml"))) {
 
-				String sCurrentLine;
-				if (!newFile.exists()) {
-					newFile.createNewFile();
-				}
-				br = new BufferedReader(new FileReader(currentPath));
-				out = new PrintWriter(new BufferedWriter(
-						new FileWriter(newFile)));
-				while ((sCurrentLine = br.readLine()) != null) {
-					String dumbyString = replaceString(findThis,
-							replaceWithThis, sCurrentLine) + "\r\n";
-					out.write(dumbyString);
-				}
-				out.close();
+				DocumentBuilder dBuilder = DocumentBuilderFactory.newInstance()
+						.newDocumentBuilder();
 
-			} catch (IOException e) {
-				e.printStackTrace();
-			} finally {
+				Document doc = dBuilder.parse(myPaths.get(i).toFile());
+				if (doc.hasChildNodes()) {
+
+					xmlFinder(doc.getChildNodes(), findThis, replaceWithThis);
+
+				}
+				TransformerFactory transformerFactory = TransformerFactory
+						.newInstance();
+				Transformer transformer = transformerFactory.newTransformer();
+				DOMSource source = new DOMSource(doc);
+				StreamResult result = new StreamResult(myPaths.get(i)
+						.toString());
+				transformer.transform(source, result);
+			} else {
+				File currentPath = new File(myPaths.get(i).toString());
+				File newFile = new File(removeFileFormat(currentPath.getPath()));
 				try {
-					if (br != null) {
-						br.close();
+
+					String sCurrentLine;
+					if (!newFile.exists()) {
+						newFile.createNewFile();
 					}
-				} catch (IOException ex) {
-					ex.printStackTrace();
+					br = new BufferedReader(new FileReader(currentPath));
+					out = new PrintWriter(new BufferedWriter(new FileWriter(
+							newFile)));
+					while ((sCurrentLine = br.readLine()) != null) {
+						String dumbyString = replaceString(findThis,
+								replaceWithThis, sCurrentLine) + "\r\n";
+						out.write(dumbyString);
+					}
+					out.close();
+
+				} catch (IOException e) {
+					e.printStackTrace();
+				} finally {
+					try {
+						if (br != null) {
+							br.close();
+						}
+					} catch (IOException ex) {
+						ex.printStackTrace();
+					}
+				}
+				replaceOldFile(currentPath, newFile);
+			}
+		}
+	}
+
+	public void xmlFinder(NodeList nodes, String findThis,
+			String replaceWithThis) {
+
+		for (int count = 0; count < nodes.getLength(); count++) {
+			Node tempNode = nodes.item(count);
+			if (tempNode.getNodeType() == Node.ELEMENT_NODE
+					& !tempNode.getTextContent().equals(""))
+				tempNode.setNodeValue(replaceXmlContent(
+						tempNode.getTextContent(), findThis, replaceWithThis));
+			if (tempNode.hasAttributes()) {
+
+				// get attributes names and values
+				NamedNodeMap nodeMap = tempNode.getAttributes();
+
+				for (int i = 0; i < nodeMap.getLength(); i++) {
+
+					Node node = nodeMap.item(i);
+					node.setNodeValue(replaceXmlContent(
+							node.getTextContent(), findThis, replaceWithThis));
+
+				}
+
+			}
+			if (tempNode.hasChildNodes()) {
+
+				xmlFinder(tempNode.getChildNodes(), findThis, replaceWithThis);
+
+			}
+
+		}
+	}
+
+	public void modifyXml(NodeList nodeList, String findThis,
+			String replaceWithThis) {
+
+		for (int count = 0; count < nodeList.getLength(); count++) {
+
+			Node tempNode = nodeList.item(count);
+
+			// make sure it's element node.
+			if (tempNode.getNodeType() == Node.ELEMENT_NODE
+					& !tempNode.getTextContent().equals("")) {
+				tempNode.setTextContent(replaceXmlContent(
+						tempNode.getTextContent(), findThis, replaceWithThis));
+				if (tempNode.hasAttributes()) {
+
+					// get attributes names and values
+					NamedNodeMap nodeMap = tempNode.getAttributes();
+
+					for (int i = 0; i < nodeMap.getLength(); i++) {
+
+						Node node = nodeMap.item(i);
+						node.setNodeValue(replaceXmlContent(
+								node.getNodeValue(), findThis, replaceWithThis));
+						System.out.println(node.getNodeValue());
+					}
+
+				}
+
+				if (tempNode.hasChildNodes()) {
+
+					// loop again if has child nodes
+					modifyXml(tempNode.getChildNodes(), findThis,
+							replaceWithThis);
+
+				}
+
+			}
+
+		}
+	}
+
+	private String replaceXmlContent(String toSplit, String toSplitOn,
+			String toAvoid) {
+		ArrayList<String> newString = new ArrayList<String>();
+
+		int i = 0;
+		int j = 0;
+		ArrayList<Integer> indices = new ArrayList<Integer>();
+		while (i < toSplit.length() & i != -1) {
+			i = toSplit.indexOf(toSplitOn, i);
+			j = toSplit.indexOf(toAvoid, j);
+			if (i >= 0) {
+				if (i != j) {
+					indices.add(i);
+					i += toSplitOn.length();
+				} else if (i == j) {
+					i = toSplit.indexOf(toSplitOn, toAvoid.length() + i);
 				}
 			}
-			replaceOldFile(currentPath, newFile);
 		}
-
+		if (indices.size() == 0) {
+			newString.add(toSplit);
+		}
+		for (int k = 0; k < indices.size(); k++) {
+			if (indices.size() == 1) {
+				if (indices.get(k) == 0) {
+					newString.add("");
+					newString.add(toSplit.substring(toSplitOn.length()));
+				} else if (toSplit.substring(indices.get(k),
+						indices.get(k) + toSplitOn.length())
+						.equals(toSplit.substring(toSplit.length()
+								- toSplitOn.length()))) {
+					newString.add(toSplit.substring(0, indices.get(k)));
+					newString.add("");
+				} else {
+					newString.add(toSplit.substring(0, indices.get(k)));
+					newString.add("");
+					newString.add(toSplit.substring(indices.get(k)
+							+ toSplitOn.length()));
+				}
+			} else if (k == 0) {
+				if (indices.get(k) == 0)
+					newString.add("");
+				else {
+					newString.add(toSplit.substring(0, indices.get(k)));
+					newString.add("");
+				}
+			} else if (k == indices.size() - 1) {
+				newString.add(toSplit.substring(indices.get(k) - 1));
+			} else {
+				newString
+						.add(toSplit.substring(
+								indices.get(k - 1) + toSplitOn.length(),
+								indices.get(k)));
+				newString.add("");
+			}
+		}
+		System.out.println(newString);
+		String[] arrayStrings = new String[newString.size()];
+		for (int k = 0; k < newString.size(); k++)
+			arrayStrings[k] = newString.get(k);
+		String newLine = "";
+		for (int k = 0; k < arrayStrings.length; k++) {
+			if (arrayStrings[k].equals(""))
+				newLine += toAvoid;
+			else
+				newLine += arrayStrings[k];
+		}
+		return newLine;
 	}
+
 	/**
 	 * Zips file with same structure as original Directory
 	 * 
@@ -277,8 +462,9 @@ public class FindAndReplaceString {
 			String currentString) {
 		String newString = "";
 		if (currentString.contains(replacer)) {
-			String[] myString = (noTouchList.isEmpty()) ? splitString(currentString, replacer,
-					replacement) : splitStringAdv(currentString, replacer);
+			String[] myString = (noTouchList.isEmpty()) ? splitString(
+					currentString, replacer, replacement) : splitStringAdv(
+					currentString, replacer);
 			newString = reformString(currentString, myString, replacer,
 					replacement);
 			return newString;
@@ -303,8 +489,8 @@ public class FindAndReplaceString {
 	public String reformString(String string, String[] mySegs,
 			String wordToSplitOn, String wordToReplace) {
 		String newLine = "";
-		for(int i = 0; i < mySegs.length; i++){
-			if(mySegs[i].equals(""))
+		for (int i = 0; i < mySegs.length; i++) {
+			if (mySegs[i].equals(""))
 				newLine += wordToReplace;
 			else
 				newLine += mySegs[i];
@@ -324,76 +510,74 @@ public class FindAndReplaceString {
 	 *            there are items like "cat" and "cats"
 	 * @return a string array split on the toSplitOn string
 	 */
-	public String[] splitString(String toSplit, String toSplitOn,
-			String toAvoid) {
+	public String[] splitString(String toSplit, String toSplitOn, String toAvoid) {
 		ArrayList<String> newString = new ArrayList<String>();
-			
-				int i = 0;
-				int j = 0;
-				ArrayList<Integer> indices = new ArrayList<Integer>();
-				while(i < toSplit.length() & i != -1){
-					i = toSplit.indexOf(toSplitOn, i);
-					j = toSplit.indexOf(toAvoid, j);
-					if(i >= 0){
-						if(i != j ){
-							indices.add(i);
-							i += toSplitOn.length();
-						}
-						else if(i == j){
-							i = toSplit.indexOf(toSplitOn, toAvoid.length() + i);
-						}
-						}
+
+		int i = 0;
+		int j = 0;
+		ArrayList<Integer> indices = new ArrayList<Integer>();
+		while (i < toSplit.length() & i != -1) {
+			i = toSplit.indexOf(toSplitOn, i);
+			j = toSplit.indexOf(toAvoid, j);
+			if (i >= 0) {
+				if (i != j) {
+					indices.add(i);
+					i += toSplitOn.length();
+				} else if (i == j) {
+					i = toSplit.indexOf(toSplitOn, toAvoid.length() + i);
 				}
-				if(indices.size() == 0){
-					newString.add(toSplit);
+			}
+		}
+		if (indices.size() == 0) {
+			newString.add(toSplit);
+		}
+		for (int k = 0; k < indices.size(); k++) {
+
+			if (indices.size() == 1) {
+				if (indices.get(k) == 0) {
+					newString.add("");
+					newString.add(toSplit.substring(toSplitOn.length()));
+				} else if (toSplit.substring(indices.get(k),
+						indices.get(k) + toSplitOn.length())
+						.equals(toSplit.substring(toSplit.length()
+								- toSplitOn.length()))) {
+					newString.add(toSplit.substring(0, indices.get(k)));
+					newString.add("");
+				} else {
+					newString.add(toSplit.substring(0, indices.get(k)));
+					newString.add("");
+					newString.add(toSplit.substring(indices.get(k)
+							+ toSplitOn.length()));
+
 				}
-				for(int k = 0; k < indices.size(); k++){
-					
-					if(indices.size() == 1){
-						if(indices.get(k) == 0){
-							newString.add("");
-							newString.add(toSplit.substring(toSplitOn.length()));
-						}
-						else if(toSplit.substring(indices.get(k), indices.get(k) + toSplitOn.length()).equals(toSplit.substring(toSplit.length()-toSplitOn.length()))){
-							newString.add(toSplit.substring(0,indices.get(k)));
-							newString.add("");
-						}
-						else
-						{
-							newString.add(toSplit.substring(0,indices.get(k)));
-							newString.add("");
-							newString.add(toSplit.substring(indices.get(k) + toSplitOn.length()));
-							
-						}
-					}
-					else if(k == 0){
-						if(indices.get(k) == 0)
-							newString.add("");
-						else{
-						newString.add(toSplit.substring(0,indices.get(k)));
-						newString.add("");
-							}
-						}
-					else if(k == indices.size()-1){
-						newString.add(toSplit.substring(indices.get(k)-1));
-					}
-					else{
-						newString.add(toSplit.substring(indices.get(k-1)+toSplitOn.length(),indices.get(k)));
-						newString.add("");
-					}
+			} else if (k == 0) {
+				if (indices.get(k) == 0)
+					newString.add("");
+				else {
+					newString.add(toSplit.substring(0, indices.get(k)));
+					newString.add("");
 				}
-			
-		
+			} else if (k == indices.size() - 1) {
+				newString.add(toSplit.substring(indices.get(k) - 1));
+			} else {
+				newString
+						.add(toSplit.substring(
+								indices.get(k - 1) + toSplitOn.length(),
+								indices.get(k)));
+				newString.add("");
+			}
+		}
+
 		String[] arrayStrings = new String[newString.size()];
 		for (int k = 0; k < newString.size(); k++)
 			arrayStrings[k] = newString.get(k);
 		return arrayStrings;
 
 	}
-	
-	public ArrayList<Integer> stringHasStuff(String currentString){
+
+	public ArrayList<Integer> stringHasStuff(String currentString) {
 		ArrayList<Integer> indices = new ArrayList<Integer>();
-		for(String j : noTouchList){
+		for (String j : noTouchList) {
 			int index = currentString.indexOf(j);
 			while (index >= 0) {
 				indices.add(index);
@@ -402,69 +586,69 @@ public class FindAndReplaceString {
 		}
 		return indices;
 	}
-	public String[] splitStringAdv(String toSplit, String toSplitOn){
+
+	public String[] splitStringAdv(String toSplit, String toSplitOn) {
 		ArrayList<String> newString = new ArrayList<String>();
-			int i = 0;
-			ArrayList<Integer> j = stringHasStuff(toSplit);
-			ArrayList<Integer> indices = new ArrayList<Integer>();
-			while(i < toSplit.length() & i != -1){
-				i = toSplit.indexOf(toSplitOn, i);
-				if(i >= 0){
-					if(!j.contains(i)){
-						indices.add(i);
-						i += toSplitOn.length();
-					}
-					else {
-						i = toSplit.indexOf(toSplitOn, i + 1);
-					}
-					}
-			}
-			System.out.println(indices);
-			if(indices.size() == 0){
-				newString.add(toSplit);
-			}
-			for(int k = 0; k < indices.size(); k++){
-				
-				if(indices.size() == 1){
-					if(indices.get(k) == 0){
-						newString.add("");
-						newString.add(toSplit.substring(toSplitOn.length()));
-					}
-					else if(toSplit.substring(indices.get(k), indices.get(k) + toSplitOn.length()).equals(toSplit.substring(toSplit.length()-toSplitOn.length()))){
-						newString.add(toSplit.substring(0,indices.get(k)));
-						newString.add("");
-					}
-					else
-					{
-						newString.add(toSplit.substring(0,indices.get(k)));
-						newString.add("");
-						newString.add(toSplit.substring(indices.get(k) + toSplitOn.length()));
-						
-					}
+		int i = 0;
+		ArrayList<Integer> j = stringHasStuff(toSplit);
+		ArrayList<Integer> indices = new ArrayList<Integer>();
+		while (i < toSplit.length() & i != -1) {
+			i = toSplit.indexOf(toSplitOn, i);
+			if (i >= 0) {
+				if (!j.contains(i)) {
+					indices.add(i);
+					i += toSplitOn.length();
+				} else {
+					i = toSplit.indexOf(toSplitOn, i + 1);
 				}
-				else if(k == 0){
-					if(indices.get(k) == 0)
-						newString.add("");
-					else{
-					newString.add(toSplit.substring(0,indices.get(k)));
+			}
+		}
+		System.out.println(indices);
+		if (indices.size() == 0) {
+			newString.add(toSplit);
+		}
+		for (int k = 0; k < indices.size(); k++) {
+
+			if (indices.size() == 1) {
+				if (indices.get(k) == 0) {
 					newString.add("");
-						}
-					}
-				else if(k == indices.size()-1){
-					newString.add(toSplit.substring(indices.get(k)-1));
+					newString.add(toSplit.substring(toSplitOn.length()));
+				} else if (toSplit.substring(indices.get(k),
+						indices.get(k) + toSplitOn.length())
+						.equals(toSplit.substring(toSplit.length()
+								- toSplitOn.length()))) {
+					newString.add(toSplit.substring(0, indices.get(k)));
+					newString.add("");
+				} else {
+					newString.add(toSplit.substring(0, indices.get(k)));
+					newString.add("");
+					newString.add(toSplit.substring(indices.get(k)
+							+ toSplitOn.length()));
+
 				}
-				else{
-					newString.add(toSplit.substring(indices.get(k-1)+toSplitOn.length(),indices.get(k)));
+			} else if (k == 0) {
+				if (indices.get(k) == 0)
+					newString.add("");
+				else {
+					newString.add(toSplit.substring(0, indices.get(k)));
 					newString.add("");
 				}
+			} else if (k == indices.size() - 1) {
+				newString.add(toSplit.substring(indices.get(k) - 1));
+			} else {
+				newString
+						.add(toSplit.substring(
+								indices.get(k - 1) + toSplitOn.length(),
+								indices.get(k)));
+				newString.add("");
 			}
-		
-			String[] arrayStrings = new String[newString.size()];
-			for (int k = 0; k < newString.size(); k++)
-				arrayStrings[k] = newString.get(k);
-			return arrayStrings;
+		}
+
+		String[] arrayStrings = new String[newString.size()];
+		for (int k = 0; k < newString.size(); k++)
+			arrayStrings[k] = newString.get(k);
+		return arrayStrings;
 	}
-	
 
 	/**
 	 * Removes file extension and places a new ending on file so old document

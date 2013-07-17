@@ -27,7 +27,7 @@ public class UnzipFile {
 		try {
 			String sourceFilePath = f.toString();
 			myDestinationFilePath = sourceFilePath.substring(0,
-					sourceFilePath.length() - 4) ;
+					sourceFilePath.length() - 4);
 			File temp = new File(myDestinationFilePath);
 			temp.mkdir();
 
@@ -44,31 +44,33 @@ public class UnzipFile {
 
 				// If the entry is directory, leave it. Otherwise extract
 				// it.
+				if (!entry.toString().contains("__MACOSX")) {
 				if (entry.isDirectory()) {
-					entryFilePath.mkdirs();
+						entryFilePath.mkdirs();
 					continue;
 				} else {
+					
+						BufferedInputStream bis = new BufferedInputStream(
+								zipFile.getInputStream(entry));
+						int b;
+						byte buffer[] = new byte[1024];
 
-					BufferedInputStream bis = new BufferedInputStream(
-							zipFile.getInputStream(entry));
-					int b;
-					byte buffer[] = new byte[1024];
+						FileOutputStream fos = new FileOutputStream(
+								entryFilePath);
+						BufferedOutputStream bos = new BufferedOutputStream(
+								fos, 1024);
 
-					FileOutputStream fos = new FileOutputStream(entryFilePath);
-					BufferedOutputStream bos = new BufferedOutputStream(fos,
-							1024);
+						while ((b = bis.read(buffer, 0, 1024)) != -1) {
+							bos.write(buffer, 0, b);
+						}
 
-					while ((b = bis.read(buffer, 0, 1024)) != -1) {
-						bos.write(buffer, 0, b);
+						// Flush the output stream and close it.
+						bos.flush();
+						bos.close();
+
+						// Close the input stream.
+						bis.close();
 					}
-
-					// Flush the output stream and close it.
-					bos.flush();
-					bos.close();
-
-					// Close the input stream.
-					bis.close();
-
 				}
 			}
 		} catch (IOException ioException) {

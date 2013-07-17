@@ -66,6 +66,7 @@ public class ControlsPanel extends JPanel implements ActionListener {
 	private JSeparator separator;
 	private JSeparator separator_1;
 	private JLabel label;
+	private JCheckBox chckbxXml;
 
 	/**
 	 * Create the panel that holds all components
@@ -305,9 +306,9 @@ public class ControlsPanel extends JPanel implements ActionListener {
 		gbc_checkPanel.gridy = 6;
 		add(checkPanel, gbc_checkPanel);
 		GridBagLayout gbl_checkPanel = new GridBagLayout();
-		gbl_checkPanel.columnWidths = new int[]{45, 39, 0};
+		gbl_checkPanel.columnWidths = new int[]{45, 0, 39, 0};
 		gbl_checkPanel.rowHeights = new int[]{23, 0};
-		gbl_checkPanel.columnWeights = new double[]{0.0, 0.0, Double.MIN_VALUE};
+		gbl_checkPanel.columnWeights = new double[]{0.0, 0.0, 0.0, Double.MIN_VALUE};
 		gbl_checkPanel.rowWeights = new double[]{0.0, Double.MIN_VALUE};
 		checkPanel.setLayout(gbl_checkPanel);
 				
@@ -321,11 +322,20 @@ public class ControlsPanel extends JPanel implements ActionListener {
 						
 								chckbxHTML.setBackground(Color.WHITE);
 								chckbxHTML.setSelected(true);
+				
+				chckbxXml = new JCheckBox("xml");
+				chckbxXml.setSelected(true);
+				chckbxXml.setBackground(Color.WHITE);
+				GridBagConstraints gbc_chckbxXml = new GridBagConstraints();
+				gbc_chckbxXml.insets = new Insets(0, 0, 0, 5);
+				gbc_chckbxXml.gridx = 1;
+				gbc_chckbxXml.gridy = 0;
+				checkPanel.add(chckbxXml, gbc_chckbxXml);
 		
 				chckbxTxt = new JCheckBox("txt");
 				GridBagConstraints gbc_chckbxTxt = new GridBagConstraints();
 				gbc_chckbxTxt.anchor = GridBagConstraints.NORTHWEST;
-				gbc_chckbxTxt.gridx = 1;
+				gbc_chckbxTxt.gridx = 2;
 				gbc_chckbxTxt.gridy = 0;
 				checkPanel.add(chckbxTxt, gbc_chckbxTxt);
 				chckbxTxt.setSelected(true);
@@ -440,5 +450,10 @@ public class ControlsPanel extends JPanel implements ActionListener {
 			optionsMap.put("txt", true);
 		else
 			optionsMap.put("txt", false);
+		if (chckbxXml.isSelected())
+			optionsMap.put("xml", true);
+		else
+			optionsMap.put("xml", false);
+		
 	}
 }
