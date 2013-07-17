@@ -17,7 +17,7 @@ import java.awt.Color;
  */
 public class MainFrame extends JFrame {
 	private static final long serialVersionUID = 1L;
-	private static final String VERSION_NAME = "0.6";
+	private static final String VERSION_NAME = "0.6_01";
 	private JPanel contentPane;
 	private ControlsPanel myPanel;
 	/**
@@ -30,7 +30,7 @@ public class MainFrame extends JFrame {
 					MainFrame frame = new MainFrame();
 					frame.setVisible(true);
 				} catch (Exception e) {
-					e.printStackTrace();
+					e.printStackTrace();	
 				}
 			}
 		});

@@ -1,5 +1,7 @@
 package stringReplacer;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.Closeable;
@@ -19,10 +21,12 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Deque;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Scanner;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -66,9 +70,7 @@ public class FindAndReplaceString {
 			String replacementString) throws Exception {
 		File f = new File(file);
 		System.out.println("Unzipping: " + f);
-		UnzipFile unzipped = new UnzipFile(f);
-
-		destinationFilePath = unzipped.getDestination();
+		destinationFilePath = unzipFile(f);
 		File newZipDestination = new File(destinationFilePath.substring(0,
 				destinationFilePath.length()) + "_New.zip");
 		System.out.println("Fixing files in " + f);
@@ -84,10 +86,10 @@ public class FindAndReplaceString {
 			String replacementString, String ignoreListLoc) throws Exception {
 		File f = new File(file);
 		System.out.println("Unzipping: " + f);
-		UnzipFile unzipped = new UnzipFile(f);
+		destinationFilePath = unzipFile(f);
 		noTouchList = importNoTouch(new File(ignoreListLoc));
 		noTouchList.add(replacementString);
-		destinationFilePath = unzipped.getDestination();
+		
 		File newZipDestination = new File(destinationFilePath.substring(0,
 				destinationFilePath.length()) + "_New.zip");
 		System.out.println("Fixing files in " + f);
@@ -206,6 +208,16 @@ public class FindAndReplaceString {
 		}
 	}
 
+	/**
+	 * Finds children of current node and sends data to be fixed by modifyXml
+	 * 
+	 * @param nodes
+	 *            list of nodes that are children of the current node
+	 * @param findThis
+	 *            string to find and replace
+	 * @param replaceWithThis
+	 *            string to be put in place
+	 */
 	public void xmlFinder(NodeList nodes, String findThis,
 			String replaceWithThis) {
 
@@ -213,7 +225,7 @@ public class FindAndReplaceString {
 			Node tempNode = nodes.item(count);
 			if (tempNode.getNodeType() == Node.ELEMENT_NODE
 					& !tempNode.getTextContent().equals(""))
-				tempNode.setNodeValue(replaceXmlContent(
+				tempNode.setNodeValue(replaceContent(
 						tempNode.getTextContent(), findThis, replaceWithThis));
 			if (tempNode.hasAttributes()) {
 
@@ -223,8 +235,8 @@ public class FindAndReplaceString {
 				for (int i = 0; i < nodeMap.getLength(); i++) {
 
 					Node node = nodeMap.item(i);
-					node.setNodeValue(replaceXmlContent(
-							node.getTextContent(), findThis, replaceWithThis));
+					node.setNodeValue(replaceContent(node.getTextContent(),
+							findThis, replaceWithThis));
 
 				}
 
@@ -238,116 +250,62 @@ public class FindAndReplaceString {
 		}
 	}
 
-	public void modifyXml(NodeList nodeList, String findThis,
-			String replaceWithThis) {
+	public String unzipFile(File f){
+		String myDestinationFilepath = "";
+		try {
+			String sourceFilePath = f.toString();
+			myDestinationFilepath = sourceFilePath.substring(0,
+					sourceFilePath.length() - 4);
+			File temp = new File(myDestinationFilepath);
+			temp.mkdir();
 
-		for (int count = 0; count < nodeList.getLength(); count++) {
+			ZipFile zipFile = new ZipFile(f);
+			Enumeration<?> e = zipFile.entries();
 
-			Node tempNode = nodeList.item(count);
+			while (e.hasMoreElements()) {
 
-			// make sure it's element node.
-			if (tempNode.getNodeType() == Node.ELEMENT_NODE
-					& !tempNode.getTextContent().equals("")) {
-				tempNode.setTextContent(replaceXmlContent(
-						tempNode.getTextContent(), findThis, replaceWithThis));
-				if (tempNode.hasAttributes()) {
+				ZipEntry entry = (ZipEntry) e.nextElement();
+				File entryFilePath = new File(myDestinationFilepath,
+						entry.getName());
 
-					// get attributes names and values
-					NamedNodeMap nodeMap = tempNode.getAttributes();
+				entryFilePath.getParentFile().mkdirs();
 
-					for (int i = 0; i < nodeMap.getLength(); i++) {
-
-						Node node = nodeMap.item(i);
-						node.setNodeValue(replaceXmlContent(
-								node.getNodeValue(), findThis, replaceWithThis));
-						System.out.println(node.getNodeValue());
-					}
-
-				}
-
-				if (tempNode.hasChildNodes()) {
-
-					// loop again if has child nodes
-					modifyXml(tempNode.getChildNodes(), findThis,
-							replaceWithThis);
-
-				}
-
-			}
-
-		}
-	}
-
-	private String replaceXmlContent(String toSplit, String toSplitOn,
-			String toAvoid) {
-		ArrayList<String> newString = new ArrayList<String>();
-
-		int i = 0;
-		int j = 0;
-		ArrayList<Integer> indices = new ArrayList<Integer>();
-		while (i < toSplit.length() & i != -1) {
-			i = toSplit.indexOf(toSplitOn, i);
-			j = toSplit.indexOf(toAvoid, j);
-			if (i >= 0) {
-				if (i != j) {
-					indices.add(i);
-					i += toSplitOn.length();
-				} else if (i == j) {
-					i = toSplit.indexOf(toSplitOn, toAvoid.length() + i);
-				}
-			}
-		}
-		if (indices.size() == 0) {
-			newString.add(toSplit);
-		}
-		for (int k = 0; k < indices.size(); k++) {
-			if (indices.size() == 1) {
-				if (indices.get(k) == 0) {
-					newString.add("");
-					newString.add(toSplit.substring(toSplitOn.length()));
-				} else if (toSplit.substring(indices.get(k),
-						indices.get(k) + toSplitOn.length())
-						.equals(toSplit.substring(toSplit.length()
-								- toSplitOn.length()))) {
-					newString.add(toSplit.substring(0, indices.get(k)));
-					newString.add("");
+				// If the entry is directory, leave it. Otherwise extract
+				// it.
+				if (!entry.toString().contains("__MACOSX")) {
+				if (entry.isDirectory()) {
+						entryFilePath.mkdirs();
+					continue;
 				} else {
-					newString.add(toSplit.substring(0, indices.get(k)));
-					newString.add("");
-					newString.add(toSplit.substring(indices.get(k)
-							+ toSplitOn.length()));
-				}
-			} else if (k == 0) {
-				if (indices.get(k) == 0)
-					newString.add("");
-				else {
-					newString.add(toSplit.substring(0, indices.get(k)));
-					newString.add("");
-				}
-			} else if (k == indices.size() - 1) {
-				newString.add(toSplit.substring(indices.get(k) - 1));
-			} else {
-				newString
-						.add(toSplit.substring(
-								indices.get(k - 1) + toSplitOn.length(),
-								indices.get(k)));
-				newString.add("");
-			}
-		}
-		System.out.println(newString);
-		String[] arrayStrings = new String[newString.size()];
-		for (int k = 0; k < newString.size(); k++)
-			arrayStrings[k] = newString.get(k);
-		String newLine = "";
-		for (int k = 0; k < arrayStrings.length; k++) {
-			if (arrayStrings[k].equals(""))
-				newLine += toAvoid;
-			else
-				newLine += arrayStrings[k];
-		}
-		return newLine;
-	}
+					
+						BufferedInputStream bis = new BufferedInputStream(
+								zipFile.getInputStream(entry));
+						int b;
+						byte buffer[] = new byte[1024];
 
+						FileOutputStream fos = new FileOutputStream(
+								entryFilePath);
+						BufferedOutputStream bos = new BufferedOutputStream(
+								fos, 1024);
+
+						while ((b = bis.read(buffer, 0, 1024)) != -1) {
+							bos.write(buffer, 0, b);
+						}
+
+						// Flush the output stream and close it.
+						bos.flush();
+						bos.close();
+
+						// Close the input stream.
+						bis.close();
+					}
+				}
+			}
+		} catch (IOException ioException) {
+			System.out.println("Input Output Exception: " + ioException);
+		}
+		return myDestinationFilepath;
+	}
 	/**
 	 * Zips file with same structure as original Directory
 	 * 
@@ -460,121 +418,12 @@ public class FindAndReplaceString {
 	 */
 	public String replaceString(String replacer, String replacement,
 			String currentString) {
-		String newString = "";
 		if (currentString.contains(replacer)) {
-			String[] myString = (noTouchList.isEmpty()) ? splitString(
-					currentString, replacer, replacement) : splitStringAdv(
-					currentString, replacer);
-			newString = reformString(currentString, myString, replacer,
-					replacement);
-			return newString;
+			return replaceContent(currentString, replacer, replacement);
 		}
 		return currentString;
 	}
-
-	/**
-	 * Remakes the string with the replacement string
-	 * 
-	 * @param string
-	 *            Original string
-	 * @param mySegs
-	 *            The string segmented on the split word
-	 * @param wordToSplitOn
-	 *            string the original string was split on, used for testing
-	 *            first and last words
-	 * @param wordToReplace
-	 *            string to be put in between segments
-	 * @return a complete string with the words in the line
-	 */
-	public String reformString(String string, String[] mySegs,
-			String wordToSplitOn, String wordToReplace) {
-		String newLine = "";
-		for (int i = 0; i < mySegs.length; i++) {
-			if (mySegs[i].equals(""))
-				newLine += wordToReplace;
-			else
-				newLine += mySegs[i];
-		}
-		return newLine;
-	}
-
-	/**
-	 * Splits strings intelligently, by avoiding the replacement string
-	 * 
-	 * @param toSplit
-	 *            The String to be split into an array
-	 * @param toSplitOn
-	 *            The string that is being searched for
-	 * @param toAvoid
-	 *            the string that we don't want to replace used in cases when
-	 *            there are items like "cat" and "cats"
-	 * @return a string array split on the toSplitOn string
-	 */
-	public String[] splitString(String toSplit, String toSplitOn, String toAvoid) {
-		ArrayList<String> newString = new ArrayList<String>();
-
-		int i = 0;
-		int j = 0;
-		ArrayList<Integer> indices = new ArrayList<Integer>();
-		while (i < toSplit.length() & i != -1) {
-			i = toSplit.indexOf(toSplitOn, i);
-			j = toSplit.indexOf(toAvoid, j);
-			if (i >= 0) {
-				if (i != j) {
-					indices.add(i);
-					i += toSplitOn.length();
-				} else if (i == j) {
-					i = toSplit.indexOf(toSplitOn, toAvoid.length() + i);
-				}
-			}
-		}
-		if (indices.size() == 0) {
-			newString.add(toSplit);
-		}
-		for (int k = 0; k < indices.size(); k++) {
-
-			if (indices.size() == 1) {
-				if (indices.get(k) == 0) {
-					newString.add("");
-					newString.add(toSplit.substring(toSplitOn.length()));
-				} else if (toSplit.substring(indices.get(k),
-						indices.get(k) + toSplitOn.length())
-						.equals(toSplit.substring(toSplit.length()
-								- toSplitOn.length()))) {
-					newString.add(toSplit.substring(0, indices.get(k)));
-					newString.add("");
-				} else {
-					newString.add(toSplit.substring(0, indices.get(k)));
-					newString.add("");
-					newString.add(toSplit.substring(indices.get(k)
-							+ toSplitOn.length()));
-
-				}
-			} else if (k == 0) {
-				if (indices.get(k) == 0)
-					newString.add("");
-				else {
-					newString.add(toSplit.substring(0, indices.get(k)));
-					newString.add("");
-				}
-			} else if (k == indices.size() - 1) {
-				newString.add(toSplit.substring(indices.get(k) - 1));
-			} else {
-				newString
-						.add(toSplit.substring(
-								indices.get(k - 1) + toSplitOn.length(),
-								indices.get(k)));
-				newString.add("");
-			}
-		}
-
-		String[] arrayStrings = new String[newString.size()];
-		for (int k = 0; k < newString.size(); k++)
-			arrayStrings[k] = newString.get(k);
-		return arrayStrings;
-
-	}
-
+	
 	public ArrayList<Integer> stringHasStuff(String currentString) {
 		ArrayList<Integer> indices = new ArrayList<Integer>();
 		for (String j : noTouchList) {
@@ -587,23 +436,55 @@ public class FindAndReplaceString {
 		return indices;
 	}
 
-	public String[] splitStringAdv(String toSplit, String toSplitOn) {
+	
+
+
+	/**
+	 * replaces the string of xml
+	 * 
+	 * @param toSplit
+	 *            string to separate
+	 * @param toSplitOn
+	 *            string to separate toSplit
+	 * @param toAvoid
+	 *            string to replace and avoid in toSplit
+	 * @return
+	 */
+	private String replaceContent(String toSplit, String toSplitOn,
+			String toAvoid) {
 		ArrayList<String> newString = new ArrayList<String>();
-		int i = 0;
-		ArrayList<Integer> j = stringHasStuff(toSplit);
 		ArrayList<Integer> indices = new ArrayList<Integer>();
-		while (i < toSplit.length() & i != -1) {
-			i = toSplit.indexOf(toSplitOn, i);
-			if (i >= 0) {
-				if (!j.contains(i)) {
-					indices.add(i);
-					i += toSplitOn.length();
-				} else {
-					i = toSplit.indexOf(toSplitOn, i + 1);
+		if (noTouchList.isEmpty()) {
+			int i = 0;
+			int j = 0;
+			while (i < toSplit.length() & i != -1) {
+				i = toSplit.indexOf(toSplitOn, i);
+				j = toSplit.indexOf(toAvoid, j);
+				if (i >= 0) {
+					if (i != j) {
+						indices.add(i);
+						i += toSplitOn.length();
+					} else if (i == j) {
+						i = toSplit.indexOf(toSplitOn, toAvoid.length() + i);
+					}
+				}
+			}
+		} else {
+			
+			int i = 0;
+			ArrayList<Integer> j = stringHasStuff(toSplit);
+			while (i < toSplit.length() & i != -1) {
+				i = toSplit.indexOf(toSplitOn, i);
+				if (i >= 0) {
+					if (!j.contains(i)) {
+						indices.add(i);
+						i += toSplitOn.length();
+					} else {
+						i = toSplit.indexOf(toSplitOn, i + 1);
+					}
 				}
 			}
 		}
-		System.out.println(indices);
 		if (indices.size() == 0) {
 			newString.add(toSplit);
 		}
@@ -643,13 +524,18 @@ public class FindAndReplaceString {
 				newString.add("");
 			}
 		}
-
 		String[] arrayStrings = new String[newString.size()];
 		for (int k = 0; k < newString.size(); k++)
 			arrayStrings[k] = newString.get(k);
-		return arrayStrings;
+		String newLine = "";
+		for (int k = 0; k < arrayStrings.length; k++) {
+			if (arrayStrings[k].equals(""))
+				newLine += toAvoid;
+			else
+				newLine += arrayStrings[k];
+		}
+		return newLine;
 	}
-
 	/**
 	 * Removes file extension and places a new ending on file so old document
 	 * can be copied

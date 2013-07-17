@@ -18,8 +18,6 @@ import java.util.HashMap;
 public class addFiles extends SimpleFileVisitor<Path> {
 	ArrayList<Path> myFilePaths = new ArrayList<Path>();
 
-	// Print information about
-	// each type of file.
 	/**
 	 * Creates a file visitor for tree walker and adds files to ArrayList to
 	 * find and fix later
@@ -32,7 +30,6 @@ public class addFiles extends SimpleFileVisitor<Path> {
 	 */
 	public FileVisitResult visitFile(Path file, BasicFileAttributes attr) {
 		if (attr.isRegularFile()) {
-			// attr.
 			HashMap<String, Boolean> myMap = ControlsPanel.optionsMap;
 			if (file.toString().contains(".txt") & myMap.get("txt"))
 				myFilePaths.add(file);

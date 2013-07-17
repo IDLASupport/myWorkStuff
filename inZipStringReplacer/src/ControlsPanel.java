@@ -36,9 +36,7 @@ import javax.swing.JSeparator;
  * @version 0.3_03
  */
 public class ControlsPanel extends JPanel implements ActionListener {
-	/**
-	 * 
-	 */
+
 	private static final long serialVersionUID = 1L;
 	private JTextField txtFindFile;
 	private JTextField txtWordsToFind;
@@ -55,9 +53,8 @@ public class ControlsPanel extends JPanel implements ActionListener {
 	private JLabel errorLabel;
 	private JCheckBox chckbxOpenFileDirectory;
 	private JTextField txtImportIgnoreableList;
-	private JButton button;
+	private JButton buttonBrowseTxt;
 	private JCheckBox chckbxIgnoreFileActive;
-	private FileOptions myOptions;
 	public static HashMap<String, Boolean> optionsMap = new HashMap<String, Boolean>();
 	private JCheckBox chckbxTxt;
 	private JCheckBox chckbxHTML;
@@ -76,12 +73,11 @@ public class ControlsPanel extends JPanel implements ActionListener {
 		setBackground(new Color(255, 255, 255));
 		GridBagLayout gridBagLayout = new GridBagLayout();
 		gridBagLayout.columnWidths = new int[] { 84, 311, 0 };
-		gridBagLayout.rowHeights = new int[] { 23, 0, 0, 0, 0, 0, 31, 0, 0, 0, 0, 0,
-				0, 0 };
-		gridBagLayout.columnWeights = new double[] { 0.0, 1.0,
-				Double.MIN_VALUE };
-		gridBagLayout.rowWeights = new double[] { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-				0.0, 0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE };
+		gridBagLayout.rowHeights = new int[] { 23, 0, 0, 0, 0, 0, 31, 0, 0, 0,
+				0, 0, 0, 0 };
+		gridBagLayout.columnWeights = new double[] { 0.0, 1.0, Double.MIN_VALUE };
+		gridBagLayout.rowWeights = new double[] { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+				0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE };
 		setLayout(gridBagLayout);
 		setFont(new Font("Arial", Font.PLAIN, 12));
 
@@ -106,37 +102,15 @@ public class ControlsPanel extends JPanel implements ActionListener {
 				}
 			}
 		});
-		
-				// sets up button to open up file chooser
-				JButton btnBrowse = new JButton("Browse");
-				btnBrowse.addActionListener(new ActionListener() {
-					public void actionPerformed(ActionEvent e) {
-					}
-				});
-				btnBrowse.setBackground(Color.LIGHT_GRAY);
-				btnBrowse.setForeground(Color.BLACK);
-				btnBrowse.addMouseListener(new MouseAdapter() {
-					@Override
-					public void mouseClicked(MouseEvent arg0) {
-						fileLocation = txtFindFile.getText();
-						JFileChooser chooser = new JFileChooser(fileLocation);
-						FileNameExtensionFilter filter = new FileNameExtensionFilter(
-								"ZIP Files", "zip");
-						chooser.setFileFilter(filter);
-						int returnVal = chooser.showOpenDialog(getParent());
-						if (returnVal == JFileChooser.APPROVE_OPTION)
-							fileLocation = chooser.getSelectedFile().toString();
-						txtFindFile.setText(fileLocation);
-						txt1Mod = true;
-					}
-				});
-				
-						GridBagConstraints gbc_btnBrowse = new GridBagConstraints();
-						gbc_btnBrowse.fill = GridBagConstraints.VERTICAL;
-						gbc_btnBrowse.insets = new Insets(0, 0, 5, 5);
-						gbc_btnBrowse.gridx = 0;
-						gbc_btnBrowse.gridy = 1;
-						add(btnBrowse, gbc_btnBrowse);
+
+		txtFindFile.setText("ZIP Location");
+		GridBagConstraints gbc_txtFindFile = new GridBagConstraints();
+		gbc_txtFindFile.fill = GridBagConstraints.HORIZONTAL;
+		gbc_txtFindFile.insets = new Insets(0, 0, 5, 0);
+		gbc_txtFindFile.gridx = 1;
+		gbc_txtFindFile.gridy = 1;
+		add(txtFindFile, gbc_txtFindFile);
+		txtFindFile.setColumns(15);
 		txtFindFile.setDropTarget(new DropTarget() {
 			@SuppressWarnings("unchecked")
 			public synchronized void drop(DropTargetDropEvent evt) {
@@ -153,14 +127,31 @@ public class ControlsPanel extends JPanel implements ActionListener {
 				}
 			}
 		});
-		txtFindFile.setText("ZIP Location");
-		GridBagConstraints gbc_txtFindFile = new GridBagConstraints();
-		gbc_txtFindFile.fill = GridBagConstraints.HORIZONTAL;
-		gbc_txtFindFile.insets = new Insets(0, 0, 5, 0);
-		gbc_txtFindFile.gridx = 1;
-		gbc_txtFindFile.gridy = 1;
-		add(txtFindFile, gbc_txtFindFile);
-		txtFindFile.setColumns(15);
+		// sets up button to open up file chooser
+		JButton btnBrowse = new JButton("Browse");
+		btnBrowse.setBackground(Color.LIGHT_GRAY);
+		btnBrowse.setForeground(Color.BLACK);
+		btnBrowse.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent arg0) {
+				fileLocation = txtFindFile.getText();
+				JFileChooser chooser = new JFileChooser(fileLocation);
+				FileNameExtensionFilter filter = new FileNameExtensionFilter(
+						"ZIP Files", "zip");
+				chooser.setFileFilter(filter);
+				int returnVal = chooser.showOpenDialog(getParent());
+				if (returnVal == JFileChooser.APPROVE_OPTION)
+					fileLocation = chooser.getSelectedFile().toString();
+				txtFindFile.setText(fileLocation);
+				txt1Mod = true;
+			}
+		});
+		GridBagConstraints gbc_btnBrowse = new GridBagConstraints();
+		gbc_btnBrowse.fill = GridBagConstraints.VERTICAL;
+		gbc_btnBrowse.insets = new Insets(0, 0, 5, 5);
+		gbc_btnBrowse.gridx = 0;
+		gbc_btnBrowse.gridy = 1;
+		add(btnBrowse, gbc_btnBrowse);
 
 		// sets up second text box for wordToFind
 		txtWordsToFind = new JTextField();
@@ -209,8 +200,8 @@ public class ControlsPanel extends JPanel implements ActionListener {
 		btnFindButton.setForeground(Color.BLACK);
 		btnFindButton.setBackground(Color.LIGHT_GRAY);
 		btnFindButton.addActionListener(this);
-		button = new JButton("Browse");
-		button.addActionListener(new ActionListener() {
+		buttonBrowseTxt = new JButton("Browse");
+		buttonBrowseTxt.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				fileLocation = txtImportIgnoreableList.getText();
 				JFileChooser chooser = new JFileChooser(fileLocation);
@@ -224,16 +215,15 @@ public class ControlsPanel extends JPanel implements ActionListener {
 				txt4mod = true;
 			}
 		});
-		button.setForeground(Color.BLACK);
-		button.setBackground(Color.LIGHT_GRAY);
-		GridBagConstraints gbc_button = new GridBagConstraints();
-		gbc_button.insets = new Insets(0, 0, 5, 5);
-		gbc_button.gridx = 0;
-		gbc_button.gridy = 4;
-		add(button, gbc_button);
+		buttonBrowseTxt.setForeground(Color.BLACK);
+		buttonBrowseTxt.setBackground(Color.LIGHT_GRAY);
+		GridBagConstraints gbc_buttonBrowseTxt = new GridBagConstraints();
+		gbc_buttonBrowseTxt.insets = new Insets(0, 0, 5, 5);
+		gbc_buttonBrowseTxt.gridx = 0;
+		gbc_buttonBrowseTxt.gridy = 4;
+		add(buttonBrowseTxt, gbc_buttonBrowseTxt);
 
 		txtImportIgnoreableList = new JTextField();
-
 		txtImportIgnoreableList.setText("Choose Ignoreable list");
 		GridBagConstraints gbc_txtImportIgnoreableList = new GridBagConstraints();
 		gbc_txtImportIgnoreableList.insets = new Insets(0, 0, 5, 0);
@@ -242,16 +232,6 @@ public class ControlsPanel extends JPanel implements ActionListener {
 		gbc_txtImportIgnoreableList.gridy = 4;
 		add(txtImportIgnoreableList, gbc_txtImportIgnoreableList);
 		txtImportIgnoreableList.setColumns(10);
-		txtImportIgnoreableList.addMouseListener(new MouseAdapter() {
-			@Override
-			public void mouseClicked(MouseEvent e) {
-				if (notSeenTxt4) {
-					txtImportIgnoreableList.setText("");
-					notSeenTxt4 = false;
-					txt4mod = true;
-				}
-			}
-		});
 		txtImportIgnoreableList.addFocusListener(new FocusAdapter() {
 			@Override
 			public void focusGained(FocusEvent arg0) {
@@ -280,7 +260,7 @@ public class ControlsPanel extends JPanel implements ActionListener {
 				}
 			}
 		});
-		
+
 		separator = new JSeparator();
 		separator.setBackground(Color.GRAY);
 		GridBagConstraints gbc_separator = new GridBagConstraints();
@@ -288,7 +268,7 @@ public class ControlsPanel extends JPanel implements ActionListener {
 		gbc_separator.gridx = 1;
 		gbc_separator.gridy = 5;
 		add(separator, gbc_separator);
-		
+
 		label = new JLabel("File Types");
 		GridBagConstraints gbc_label = new GridBagConstraints();
 		gbc_label.insets = new Insets(0, 0, 5, 5);
@@ -306,41 +286,42 @@ public class ControlsPanel extends JPanel implements ActionListener {
 		gbc_checkPanel.gridy = 6;
 		add(checkPanel, gbc_checkPanel);
 		GridBagLayout gbl_checkPanel = new GridBagLayout();
-		gbl_checkPanel.columnWidths = new int[]{45, 0, 39, 0};
-		gbl_checkPanel.rowHeights = new int[]{23, 0};
-		gbl_checkPanel.columnWeights = new double[]{0.0, 0.0, 0.0, Double.MIN_VALUE};
-		gbl_checkPanel.rowWeights = new double[]{0.0, Double.MIN_VALUE};
+		gbl_checkPanel.columnWidths = new int[] { 45, 0, 39, 0 };
+		gbl_checkPanel.rowHeights = new int[] { 23, 0 };
+		gbl_checkPanel.columnWeights = new double[] { 0.0, 0.0, 0.0,
+				Double.MIN_VALUE };
+		gbl_checkPanel.rowWeights = new double[] { 0.0, Double.MIN_VALUE };
 		checkPanel.setLayout(gbl_checkPanel);
-				
-						chckbxHTML = new JCheckBox("html");
-						GridBagConstraints gbc_chckbxHTML = new GridBagConstraints();
-						gbc_chckbxHTML.anchor = GridBagConstraints.NORTHWEST;
-						gbc_chckbxHTML.insets = new Insets(0, 0, 0, 5);
-						gbc_chckbxHTML.gridx = 0;
-						gbc_chckbxHTML.gridy = 0;
-						checkPanel.add(chckbxHTML, gbc_chckbxHTML);
-						
-								chckbxHTML.setBackground(Color.WHITE);
-								chckbxHTML.setSelected(true);
-				
-				chckbxXml = new JCheckBox("xml");
-				chckbxXml.setSelected(true);
-				chckbxXml.setBackground(Color.WHITE);
-				GridBagConstraints gbc_chckbxXml = new GridBagConstraints();
-				gbc_chckbxXml.insets = new Insets(0, 0, 0, 5);
-				gbc_chckbxXml.gridx = 1;
-				gbc_chckbxXml.gridy = 0;
-				checkPanel.add(chckbxXml, gbc_chckbxXml);
-		
-				chckbxTxt = new JCheckBox("txt");
-				GridBagConstraints gbc_chckbxTxt = new GridBagConstraints();
-				gbc_chckbxTxt.anchor = GridBagConstraints.NORTHWEST;
-				gbc_chckbxTxt.gridx = 2;
-				gbc_chckbxTxt.gridy = 0;
-				checkPanel.add(chckbxTxt, gbc_chckbxTxt);
-				chckbxTxt.setSelected(true);
-				chckbxTxt.setBackground(Color.WHITE);
-		
+
+		chckbxHTML = new JCheckBox("html");
+		GridBagConstraints gbc_chckbxHTML = new GridBagConstraints();
+		gbc_chckbxHTML.anchor = GridBagConstraints.NORTHWEST;
+		gbc_chckbxHTML.insets = new Insets(0, 0, 0, 5);
+		gbc_chckbxHTML.gridx = 0;
+		gbc_chckbxHTML.gridy = 0;
+		checkPanel.add(chckbxHTML, gbc_chckbxHTML);
+
+		chckbxHTML.setBackground(Color.WHITE);
+		chckbxHTML.setSelected(true);
+
+		chckbxXml = new JCheckBox("xml");
+		chckbxXml.setSelected(true);
+		chckbxXml.setBackground(Color.WHITE);
+		GridBagConstraints gbc_chckbxXml = new GridBagConstraints();
+		gbc_chckbxXml.insets = new Insets(0, 0, 0, 5);
+		gbc_chckbxXml.gridx = 1;
+		gbc_chckbxXml.gridy = 0;
+		checkPanel.add(chckbxXml, gbc_chckbxXml);
+
+		chckbxTxt = new JCheckBox("txt");
+		GridBagConstraints gbc_chckbxTxt = new GridBagConstraints();
+		gbc_chckbxTxt.anchor = GridBagConstraints.NORTHWEST;
+		gbc_chckbxTxt.gridx = 2;
+		gbc_chckbxTxt.gridy = 0;
+		checkPanel.add(chckbxTxt, gbc_chckbxTxt);
+		chckbxTxt.setSelected(true);
+		chckbxTxt.setBackground(Color.WHITE);
+
 		separator_1 = new JSeparator();
 		GridBagConstraints gbc_separator_1 = new GridBagConstraints();
 		gbc_separator_1.insets = new Insets(0, 0, 5, 0);
@@ -373,10 +354,10 @@ public class ControlsPanel extends JPanel implements ActionListener {
 			public void mouseClicked(MouseEvent e) {
 				if (chckbxIgnoreFileActive.isSelected()) {
 					txtImportIgnoreableList.setVisible(true);
-					button.setVisible(true);
+					buttonBrowseTxt.setVisible(true);
 				} else {
 					txtImportIgnoreableList.setVisible(false);
-					button.setVisible(false);
+					buttonBrowseTxt.setVisible(false);
 				}
 			}
 
@@ -415,15 +396,18 @@ public class ControlsPanel extends JPanel implements ActionListener {
 				else {
 					setMap();
 					if (chckbxIgnoreFileActive.isSelected()) {
-						new FindAndReplaceString(txtFindFile.getText(),
+						FindAndReplaceString advFind = new FindAndReplaceString(txtFindFile.getText(),
 								txtWordsToFind.getText(),
 								txtWordsThatReplace.getText(),
 								txtImportIgnoreableList.getText());
-					} else
-						new FindAndReplaceString(txtFindFile.getText(),
+						
+					} else{
+						FindAndReplaceString simpleFind = new FindAndReplaceString(txtFindFile.getText(),
 								txtWordsToFind.getText(),
 								txtWordsThatReplace.getText());
-					if (chckbxOpenFileDirectory.isSelected())
+						
+					}
+						if (chckbxOpenFileDirectory.isSelected())
 						Desktop.getDesktop()
 								.open(new File(txtFindFile.getText())
 										.getParentFile());
@@ -454,6 +438,6 @@ public class ControlsPanel extends JPanel implements ActionListener {
 			optionsMap.put("xml", true);
 		else
 			optionsMap.put("xml", false);
-		
+
 	}
 }
