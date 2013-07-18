@@ -1,49 +1,18 @@
 package stringReplacer;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.Closeable;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.PrintWriter;
+import java.io.*;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Deque;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.Scanner;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
-import java.util.zip.ZipOutputStream;
-
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.stream.XMLOutputFactory;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
+import java.util.*;
+import java.util.zip.*;
+import javax.xml.parsers.*;
+import javax.xml.transform.*;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
-
 import org.apache.commons.io.FileUtils;
-import org.w3c.dom.Document;
-import org.w3c.dom.NamedNodeMap;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
+import org.w3c.dom.*;
 import org.xml.sax.SAXException;
 
 /**
@@ -89,7 +58,7 @@ public class FindAndReplaceString {
 		destinationFilePath = unzipFile(f);
 		noTouchList = importNoTouch(new File(ignoreListLoc));
 		noTouchList.add(replacementString);
-		
+
 		File newZipDestination = new File(destinationFilePath.substring(0,
 				destinationFilePath.length()) + "_New.zip");
 		System.out.println("Fixing files in " + f);
@@ -110,6 +79,7 @@ public class FindAndReplaceString {
 	public ArrayList<String> importNoTouch(File txtFile) {
 		ArrayList<String> noTouchList = new ArrayList<String>();
 		try {
+			@SuppressWarnings("resource")
 			Scanner in = new Scanner(txtFile);
 			while (in.hasNextLine()) {
 				noTouchList.add(in.nextLine());
@@ -225,8 +195,8 @@ public class FindAndReplaceString {
 			Node tempNode = nodes.item(count);
 			if (tempNode.getNodeType() == Node.ELEMENT_NODE
 					& !tempNode.getTextContent().equals(""))
-				tempNode.setNodeValue(replaceContent(
-						tempNode.getTextContent(), findThis, replaceWithThis));
+				tempNode.setNodeValue(replaceContent(tempNode.getTextContent(),
+						findThis, replaceWithThis));
 			if (tempNode.hasAttributes()) {
 
 				// get attributes names and values
@@ -250,7 +220,14 @@ public class FindAndReplaceString {
 		}
 	}
 
-	public String unzipFile(File f){
+	/**
+	 * Unzips a zip archive from the specified file
+	 * 
+	 * @param f
+	 *            a file to unzip
+	 * @return
+	 */
+	public String unzipFile(File f) {
 		String myDestinationFilepath = "";
 		try {
 			String sourceFilePath = f.toString();
@@ -273,11 +250,11 @@ public class FindAndReplaceString {
 				// If the entry is directory, leave it. Otherwise extract
 				// it.
 				if (!entry.toString().contains("__MACOSX")) {
-				if (entry.isDirectory()) {
+					if (entry.isDirectory()) {
 						entryFilePath.mkdirs();
-					continue;
-				} else {
-					
+						continue;
+					} else {
+
 						BufferedInputStream bis = new BufferedInputStream(
 								zipFile.getInputStream(entry));
 						int b;
@@ -306,6 +283,7 @@ public class FindAndReplaceString {
 		}
 		return myDestinationFilepath;
 	}
+
 	/**
 	 * Zips file with same structure as original Directory
 	 * 
@@ -423,7 +401,7 @@ public class FindAndReplaceString {
 		}
 		return currentString;
 	}
-	
+
 	public ArrayList<Integer> stringHasStuff(String currentString) {
 		ArrayList<Integer> indices = new ArrayList<Integer>();
 		for (String j : noTouchList) {
@@ -436,9 +414,6 @@ public class FindAndReplaceString {
 		return indices;
 	}
 
-	
-
-
 	/**
 	 * replaces the string of xml
 	 * 
@@ -448,7 +423,7 @@ public class FindAndReplaceString {
 	 *            string to separate toSplit
 	 * @param toAvoid
 	 *            string to replace and avoid in toSplit
-	 * @return
+	 * @return the final string
 	 */
 	private String replaceContent(String toSplit, String toSplitOn,
 			String toAvoid) {
@@ -470,7 +445,7 @@ public class FindAndReplaceString {
 				}
 			}
 		} else {
-			
+
 			int i = 0;
 			ArrayList<Integer> j = stringHasStuff(toSplit);
 			while (i < toSplit.length() & i != -1) {
@@ -536,6 +511,7 @@ public class FindAndReplaceString {
 		}
 		return newLine;
 	}
+
 	/**
 	 * Removes file extension and places a new ending on file so old document
 	 * can be copied

@@ -9,7 +9,6 @@ import javax.swing.border.EmptyBorder;
 import java.awt.Font;
 import javax.swing.JLabel;
 import java.awt.GridBagConstraints;
-import java.awt.Insets;
 import java.awt.Color;
 /**
  * 
