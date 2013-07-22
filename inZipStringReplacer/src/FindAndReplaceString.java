@@ -24,6 +24,7 @@ public class FindAndReplaceString {
 	private String destinationFilePath;
 	private ArrayList<String> noTouchList = new ArrayList<String>();
 	private String myStyleLoc;
+	private HashMap<String, Boolean> myOptionsMap = new HashMap<String, Boolean>();
 
 	/**
 	 * Constructor to build a new FindAndReplacString Class runs different
@@ -39,11 +40,11 @@ public class FindAndReplaceString {
 	public FindAndReplaceString(String file, String replacerString,
 			String replacementString, String ignoreListLoc, String zipCopyStyle)
 			throws Exception {
+
 		File f = new File(file);
 		System.out.println("Unzipping: " + f);
 		destinationFilePath = unzipFile(f);
-		if (!ignoreListLoc.isEmpty()
-				&& !ignoreListLoc.equals("Choose Ignoreable list")) {
+		if (ControlsPanel.optionsMap.get("Ignore File List")) {
 			noTouchList = importNoTouch(new File(ignoreListLoc));
 			noTouchList.add(replacementString);
 		}
@@ -51,16 +52,19 @@ public class FindAndReplaceString {
 		File newZipDestination = new File(destinationFilePath.substring(0,
 				destinationFilePath.length()) + "_New.zip");
 		System.out.println("Fixing files in " + f);
-		if (!(zipCopyStyle.isEmpty() && zipCopyStyle.equals("Lesson to Copy"))) {
+		if (ControlsPanel.optionsMap.get("copyStyle")) {
 			myStyleLoc = unzipFile(new File(zipCopyStyle));
 			fixCss();
+			System.out.println("Deleting files from " + myStyleLoc);
+
+			FileUtils.cleanDirectory(new File(myStyleLoc));
+			FileUtils.deleteDirectory(new File(myStyleLoc));
 		}
 		findAndReplace(replacerString, replacementString);
 		System.out.println("Zipping file to " + newZipDestination);
 		zipFile(destinationFilePath, newZipDestination);
+
 		System.out.println("Deleting files from " + destinationFilePath);
-		FileUtils.cleanDirectory(new File(myStyleLoc));
-		FileUtils.deleteDirectory(new File(myStyleLoc));
 		FileUtils.cleanDirectory(new File(destinationFilePath));
 		FileUtils.deleteDirectory(new File(destinationFilePath));
 	}
@@ -111,43 +115,164 @@ public class FindAndReplaceString {
 		System.out.println(myDestPath);
 		try {
 			findAndReplaceFile("_print.css", mySrcPath, myDestPath);
+			mySrcPath = walkCssFileTree(myStyleLoc);
+			myDestPath = walkCssFileTree(destinationFilePath);
+
 			findAndReplaceFile("mobile-style.css", mySrcPath, myDestPath);
-			findAndReplaceNamedCss();
-			addAndReplaceImgs(mySrcPath);
+
+			mySrcPath = walkCssFileTree(myStyleLoc);
+			myDestPath = walkCssFileTree(destinationFilePath);
+			findAndReplaceNamedCss(mySrcPath, myDestPath);
+
+			mySrcPath = walkCssFileTree(myStyleLoc);
+			myDestPath = walkCssFileTree(destinationFilePath);
+			addAndReplaceImgs(mySrcPath, myDestPath);
+
+			mySrcPath = walkCssFileTree(myStyleLoc);
+			myDestPath = walkCssFileTree(destinationFilePath);
+
+			replaceBannerCustom(af.getHtmlPaths(), myDestPath);
+
+			mySrcPath = walkCssFileTree(myStyleLoc);
+			myDestPath = walkCssFileTree(destinationFilePath);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
-	public void findAndReplaceNamedCss() throws IOException{
-		File styleFile = new File(myStyleLoc);
-		File srcCss = new File(myStyleLoc +  "\\" +styleFile.getName().toString() +  "\\" +styleFile.getName().toString() + ".css");
-		File destFile = new File(destinationFilePath);
-		File destCss = new File(destinationFilePath + "\\" +destFile.getName().toString()+ "\\" +destFile.getName().toString()+  ".css");
-		FileUtils.copyFile(srcCss, destCss);
+
+	public ArrayList<Path> walkCssFileTree(String myLoc) {
+		Path myPath = Paths.get(myLoc);
+		addFiles af = new addFiles();
+		try {
+			Files.walkFileTree(myPath, af);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return af.getCssAndPicturePath();
 	}
-	public void addAndReplaceImgs(ArrayList<Path> mySrcPath) throws IOException{
+
+	public void findAndReplaceNamedCss(ArrayList<Path> mySrcPath,
+			ArrayList<Path> myDestPath) throws IOException {
+		File styleFile = new File(myStyleLoc);
+		File srcCss = null;
+		for (int i = 0; i < mySrcPath.size(); i++) {
+			if (mySrcPath.get(i).toString()
+					.contains(styleFile.getName().toString() + ".css")) {
+				srcCss = (mySrcPath.get(i).toFile());
+				System.out.println(srcCss);
+			}
+		}
 		File destFile = new File(destinationFilePath);
-		File destPath = new File(destinationFilePath + "\\" +destFile.getName().toString());
-		for(int i = 0; i < mySrcPath.size(); i++){
-			FileUtils.copyFileToDirectory(mySrcPath.get(i).toFile(),destPath);
+		File destCss = null;
+		for (int i = 0; i < myDestPath.size(); i++) {
+
+			if (myDestPath.get(i).toString()
+					.contains(destFile.getName().toString() + ".css")) {
+				destCss = (myDestPath.get(i).toFile());
+				System.out.println(destCss);
+			}
+		}
+		if (srcCss != null && (srcCss.isFile() & destCss.isFile())) {
+			FileUtils.copyFile(srcCss, destCss);
+			replaceOldFile(destCss, srcCss);
 		}
 	}
-	public void findAndReplaceFile(String finder,ArrayList<Path> mySrcPath, ArrayList<Path> myDestPath) throws IOException{
+
+	public void replaceBannerCustom(ArrayList<Path> htmlFiles,
+			ArrayList<Path> myDestPath) {
+		ArrayList<File> destCssHtml = new ArrayList<File>();
+		for (Path k : htmlFiles) {
+			destCssHtml.add(k.toFile());
+		}
+		File destCss = null;
+		for (int i = 0; i < myDestPath.size(); i++) {
+			if (myDestPath.get(i).toString().contains(".css")
+					| myDestPath.get(i).toString().contains(".html")) {
+				destCssHtml.add(myDestPath.get(i).toFile());
+			}
+		}
+		System.out.println(destCssHtml);
+		for (int i = 0; i < destCssHtml.size(); i++) {
+
+			destCss = destCssHtml.get(i);
+			File newFile = new File(removeFileFormat(destCssHtml.get(i)
+					.toString()));
+			BufferedReader br = null;
+			try {
+
+				String sCurrentLine;
+				if (!newFile.exists()) {
+					newFile.createNewFile();
+				}
+				br = new BufferedReader(new FileReader(destCss));
+				PrintWriter out = new PrintWriter(new BufferedWriter(
+						new FileWriter(newFile)));
+				while ((sCurrentLine = br.readLine()) != null) {
+					String dumbyString = replaceString("banner_custom.gif",
+							"banner_custom.png", sCurrentLine);
+					dumbyString = replaceString("banner_custom.jpg",
+							"banner_custom.png", dumbyString);					
+					dumbyString += "\r\n";
+					if(dumbyString.contains("role=\"banner\"") && br.readLine().contains("</div>")){
+						dumbyString += "<img src=\"banner_custom.png\" alt=\"\" border=\"0\" class=\"banner\">" + "\r\n" +  "</div>"+ "\r\n";
+					}
+					out.write(dumbyString);
+				}
+				out.close();
+
+			} catch (IOException e) {
+				e.printStackTrace();
+			} finally {
+				try {
+					if (br != null) {
+						br.close();
+					}
+				} catch (IOException ex) {
+					ex.printStackTrace();
+				}
+			}
+			replaceOldFile(destCss, newFile);
+		}
+
+	}
+
+	public void addAndReplaceImgs(ArrayList<Path> mySrcPath,
+			ArrayList<Path> myDestPath) throws IOException {
+		File destFile = new File(destinationFilePath);
+		File destPath = new File(destinationFilePath + "\\"
+				+ destFile.getName().toString()  + "\\"
+						+ destFile.getName().toString());
+
+		for (int i = 0; i < mySrcPath.size(); i++) {
+			if (!myDestPath.contains(mySrcPath.get(i).getFileName())
+					& (mySrcPath.get(i).toString().contains(".png")
+							| mySrcPath.get(i).toString().contains(".jpg") | mySrcPath
+							.get(i).toString().contains(".gif"))) {
+				FileUtils.copyFileToDirectory(mySrcPath.get(i).toFile(),
+						destPath);
+
+			}
+		}
+	}
+
+	public void findAndReplaceFile(String finder, ArrayList<Path> mySrcPath,
+			ArrayList<Path> myDestPath) throws IOException {
 		File srcFile = new File("");
 		File destFile = new File("");
-		for(int i = 0; i < mySrcPath.size();i ++){
-			if(mySrcPath.get(i).toString().contains(finder)){
+		for (int i = 0; i < mySrcPath.size(); i++) {
+			if (mySrcPath.get(i).toString().contains(finder)) {
 				srcFile = mySrcPath.get(i).toFile();
 			}
 		}
-		for(int i = 0; i < myDestPath.size();i ++){
-			if(myDestPath.get(i).toString().contains(finder)){
+		for (int i = 0; i < myDestPath.size(); i++) {
+			if (myDestPath.get(i).toString().contains(finder)) {
 				destFile = myDestPath.get(i).toFile();
 			}
 		}
 		FileUtils.copyFile(srcFile, destFile);
 	}
+
 	/**
 	 * Grabs each line in document and sends to replaceString after completed
 	 * sends file to be replaced by replaceOldFile()

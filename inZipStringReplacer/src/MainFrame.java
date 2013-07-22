@@ -19,7 +19,7 @@ import java.awt.Insets;
  */
 public class MainFrame extends JFrame {
 	private static final long serialVersionUID = 1L;
-	private static final String VERSION_NAME = "0.6_01";
+	private static final String VERSION_NAME = "0.7";
 	private JPanel contentPane;
 	private ControlsPanel myPanel;
 	/**

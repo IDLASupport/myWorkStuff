@@ -19,6 +19,7 @@ import java.util.HashMap;
 public class addFiles extends SimpleFileVisitor<Path> {
 	ArrayList<Path> myFilePaths = new ArrayList<Path>();
 	ArrayList<Path> myCssAndPicturePaths = new ArrayList<Path>();
+	ArrayList<Path> myHtmlPaths = new ArrayList<Path>();
 	/**
 	 * Creates a file visitor for tree walker and adds files to ArrayList to
 	 * find and fix later
@@ -34,12 +35,13 @@ public class addFiles extends SimpleFileVisitor<Path> {
 			HashMap<String, Boolean> myMap = ControlsPanel.optionsMap;
 			if (file.toString().contains(".txt") & myMap.get("txt"))
 				myFilePaths.add(file);
-			if (file.toString().contains(".html") & myMap.get("html"))
+			if (file.toString().contains(".html") & myMap.get("html")){
 				myFilePaths.add(file);
-
+				myHtmlPaths.add(file);
+			}
 			if (file.toString().substring(file.toString().length()-4).contains(".xml") & myMap.get("xml"))
 				myFilePaths.add(file);
-			if((file.toString().contains("extra-img")| file.toString().contains("footer_custom")) & (file.toString().contains(".png") | file.toString().contains(".jpg") | file.toString().contains(".gif")) & myMap.get("convertCss")){
+			if(!file.toString().contains("sclb_extras") & !file.toString().contains("mobile_pages") & (file.toString().contains(".png") | file.toString().contains(".jpg") | file.toString().contains(".gif")) & myMap.get("convertCss")){
 				myCssAndPicturePaths.add(file);
 			}
 			if(file.toString().contains(".css") & myMap.get("convertCss")){
@@ -60,6 +62,9 @@ public class addFiles extends SimpleFileVisitor<Path> {
 	}
 	public ArrayList<Path> getCssAndPicturePath(){
 		return myCssAndPicturePaths;
+	}
+	public ArrayList<Path> getHtmlPaths(){
+		return myHtmlPaths;
 	}
 	public void setCssAndPicturePath(ArrayList<Path> newPath){
 		myCssAndPicturePaths = newPath;

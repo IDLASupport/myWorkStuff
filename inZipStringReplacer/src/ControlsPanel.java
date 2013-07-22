@@ -415,7 +415,7 @@ public class ControlsPanel extends JPanel implements ActionListener {
 		gbc_chckbxIgnoreFileActive.gridy = 10;
 		add(chckbxIgnoreFileActive, gbc_chckbxIgnoreFileActive);
 		chckbxIgnoreFileActive.addMouseListener(new MouseAdapter() {
-			public void mouseClicked(MouseEvent e) {
+			public void mousePressed(MouseEvent e) {
 				if (chckbxIgnoreFileActive.isSelected()) {
 					txtImportIgnoreableList.setVisible(true);
 					buttonBrowseTxt.setVisible(true);
@@ -510,6 +510,13 @@ public class ControlsPanel extends JPanel implements ActionListener {
 			optionsMap.put("convertCss", true);
 		else
 			optionsMap.put("convertCss", false);
-
+		if(chckbxCopyStyle.isSelected())
+			optionsMap.put("copyStyle", true);
+		else
+			optionsMap.put("copyStyle", false);
+		if(chckbxIgnoreFileActive.isSelected())
+			optionsMap.put("Ignore File List", true);
+		else
+			optionsMap.put("Ignore File List", false);
 	}
 }
