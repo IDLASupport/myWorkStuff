@@ -23,6 +23,7 @@ import org.xml.sax.SAXException;
 public class FindAndReplaceString {
 	private String destinationFilePath;
 	private ArrayList<String> noTouchList = new ArrayList<String>();
+	private String myStyleLoc;
 
 	/**
 	 * Constructor to build a new FindAndReplacString Class runs different
@@ -36,39 +37,32 @@ public class FindAndReplaceString {
 	 *            string that replace the replacerString
 	 */
 	public FindAndReplaceString(String file, String replacerString,
-			String replacementString) throws Exception {
+			String replacementString, String ignoreListLoc, String zipCopyStyle)
+			throws Exception {
 		File f = new File(file);
 		System.out.println("Unzipping: " + f);
 		destinationFilePath = unzipFile(f);
-		File newZipDestination = new File(destinationFilePath.substring(0,
-				destinationFilePath.length()) + "_New.zip");
-		System.out.println("Fixing files in " + f);
-		findAndReplace(replacerString, replacementString);
-		System.out.println("Zipping file to " + newZipDestination);
-		zipFile(destinationFilePath, newZipDestination);
-		System.out.println("Deleting files from " + destinationFilePath);
-		FileUtils.cleanDirectory(new File(destinationFilePath));
-		FileUtils.deleteDirectory(new File(destinationFilePath));
-	}
-
-	public FindAndReplaceString(String file, String replacerString,
-			String replacementString, String ignoreListLoc) throws Exception {
-		File f = new File(file);
-		System.out.println("Unzipping: " + f);
-		destinationFilePath = unzipFile(f);
-		noTouchList = importNoTouch(new File(ignoreListLoc));
-		noTouchList.add(replacementString);
+		if (!ignoreListLoc.isEmpty()
+				&& !ignoreListLoc.equals("Choose Ignoreable list")) {
+			noTouchList = importNoTouch(new File(ignoreListLoc));
+			noTouchList.add(replacementString);
+		}
 
 		File newZipDestination = new File(destinationFilePath.substring(0,
 				destinationFilePath.length()) + "_New.zip");
 		System.out.println("Fixing files in " + f);
+		if (!(zipCopyStyle.isEmpty() && zipCopyStyle.equals("Lesson to Copy"))) {
+			myStyleLoc = unzipFile(new File(zipCopyStyle));
+			fixCss();
+		}
 		findAndReplace(replacerString, replacementString);
 		System.out.println("Zipping file to " + newZipDestination);
 		zipFile(destinationFilePath, newZipDestination);
 		System.out.println("Deleting files from " + destinationFilePath);
+		FileUtils.cleanDirectory(new File(myStyleLoc));
+		FileUtils.deleteDirectory(new File(myStyleLoc));
 		FileUtils.cleanDirectory(new File(destinationFilePath));
 		FileUtils.deleteDirectory(new File(destinationFilePath));
-
 	}
 
 	/**
@@ -93,6 +87,67 @@ public class FindAndReplaceString {
 
 	}
 
+	public void fixCss() {
+		ArrayList<Path> mySrcPath = new ArrayList<Path>();
+		ArrayList<Path> myDestPath = new ArrayList<Path>();
+		ArrayList<Path> blankPaths = new ArrayList<Path>();
+		Path myPath = Paths.get(myStyleLoc);
+		addFiles af = new addFiles();
+		try {
+			Files.walkFileTree(myPath, af);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		mySrcPath = af.getCssAndPicturePath();
+		af.setCssAndPicturePath(blankPaths);
+		myPath = Paths.get(destinationFilePath);
+		try {
+			Files.walkFileTree(myPath, af);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		myDestPath = af.getCssAndPicturePath();
+		System.out.println(mySrcPath);
+		System.out.println(myDestPath);
+		try {
+			findAndReplaceFile("_print.css", mySrcPath, myDestPath);
+			findAndReplaceFile("mobile-style.css", mySrcPath, myDestPath);
+			findAndReplaceNamedCss();
+			addAndReplaceImgs(mySrcPath);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	public void findAndReplaceNamedCss() throws IOException{
+		File styleFile = new File(myStyleLoc);
+		File srcCss = new File(myStyleLoc +  "\\" +styleFile.getName().toString() +  "\\" +styleFile.getName().toString() + ".css");
+		File destFile = new File(destinationFilePath);
+		File destCss = new File(destinationFilePath + "\\" +destFile.getName().toString()+ "\\" +destFile.getName().toString()+  ".css");
+		FileUtils.copyFile(srcCss, destCss);
+	}
+	public void addAndReplaceImgs(ArrayList<Path> mySrcPath) throws IOException{
+		File destFile = new File(destinationFilePath);
+		File destPath = new File(destinationFilePath + "\\" +destFile.getName().toString());
+		for(int i = 0; i < mySrcPath.size(); i++){
+			FileUtils.copyFileToDirectory(mySrcPath.get(i).toFile(),destPath);
+		}
+	}
+	public void findAndReplaceFile(String finder,ArrayList<Path> mySrcPath, ArrayList<Path> myDestPath) throws IOException{
+		File srcFile = new File("");
+		File destFile = new File("");
+		for(int i = 0; i < mySrcPath.size();i ++){
+			if(mySrcPath.get(i).toString().contains(finder)){
+				srcFile = mySrcPath.get(i).toFile();
+			}
+		}
+		for(int i = 0; i < myDestPath.size();i ++){
+			if(myDestPath.get(i).toString().contains(finder)){
+				destFile = myDestPath.get(i).toFile();
+			}
+		}
+		FileUtils.copyFile(srcFile, destFile);
+	}
 	/**
 	 * Grabs each line in document and sends to replaceString after completed
 	 * sends file to be replaced by replaceOldFile()

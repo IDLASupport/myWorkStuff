@@ -10,6 +10,7 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+
 /**
  * 
  * @author Nicholas McNew
@@ -17,7 +18,7 @@ import java.util.HashMap;
  */
 public class addFiles extends SimpleFileVisitor<Path> {
 	ArrayList<Path> myFilePaths = new ArrayList<Path>();
-
+	ArrayList<Path> myCssAndPicturePaths = new ArrayList<Path>();
 	/**
 	 * Creates a file visitor for tree walker and adds files to ArrayList to
 	 * find and fix later
@@ -38,6 +39,12 @@ public class addFiles extends SimpleFileVisitor<Path> {
 
 			if (file.toString().substring(file.toString().length()-4).contains(".xml") & myMap.get("xml"))
 				myFilePaths.add(file);
+			if((file.toString().contains("extra-img")| file.toString().contains("footer_custom")) & (file.toString().contains(".png") | file.toString().contains(".jpg") | file.toString().contains(".gif")) & myMap.get("convertCss")){
+				myCssAndPicturePaths.add(file);
+			}
+			if(file.toString().contains(".css") & myMap.get("convertCss")){
+				myCssAndPicturePaths.add(file);
+			}
 
 		}
 
@@ -51,7 +58,12 @@ public class addFiles extends SimpleFileVisitor<Path> {
 	public ArrayList<Path> getFilePaths() {
 		return myFilePaths;
 	}
-
+	public ArrayList<Path> getCssAndPicturePath(){
+		return myCssAndPicturePaths;
+	}
+	public void setCssAndPicturePath(ArrayList<Path> newPath){
+		myCssAndPicturePaths = newPath;
+	}
 	// If there is some error accessing
 	// the file, let the user know.
 	// If you don't override this method

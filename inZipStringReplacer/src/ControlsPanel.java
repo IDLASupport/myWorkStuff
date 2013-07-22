@@ -49,9 +49,10 @@ public class ControlsPanel extends JPanel implements ActionListener {
 	public boolean notSeenTxt3 = true;
 	public boolean notSeenTxt4 = true;
 	public boolean txt4mod = false;
+	private boolean txt5mod = false;
 	private JLabel errorLabel;
 	private JCheckBox chckbxOpenFileDirectory;
-	private JTextField txtImportIgnoreableList;
+	public JTextField txtImportIgnoreableList;
 	private JButton buttonBrowseTxt;
 	private JCheckBox chckbxIgnoreFileActive;
 	public static HashMap<String, Boolean> optionsMap = new HashMap<String, Boolean>();
@@ -63,6 +64,9 @@ public class ControlsPanel extends JPanel implements ActionListener {
 	private JSeparator separator_1;
 	private JLabel label;
 	private JCheckBox chckbxXml;
+	private JCheckBox chckbxCopyStyle;
+	public JTextField txtLessonToCopy;
+	private JButton buttonCopyStyleBrowse;
 
 	/**
 	 * Create the panel that holds all components
@@ -72,11 +76,11 @@ public class ControlsPanel extends JPanel implements ActionListener {
 		setBackground(new Color(255, 255, 255));
 		GridBagLayout gridBagLayout = new GridBagLayout();
 		gridBagLayout.columnWidths = new int[] { 84, 311, 0 };
-		gridBagLayout.rowHeights = new int[] { 23, 0, 0, 0, 0, 0, 31, 0, 0, 0,
+		gridBagLayout.rowHeights = new int[] { 23, 0, 0, 0, 0, 0, 0, 31, 0, 0, 0, 0,
 				0, 0, 0, 0 };
 		gridBagLayout.columnWeights = new double[] { 0.0, 1.0, Double.MIN_VALUE };
-		gridBagLayout.rowWeights = new double[] { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-				0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE };
+		gridBagLayout.rowWeights = new double[] { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+				0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE };
 		setLayout(gridBagLayout);
 		setFont(new Font("Arial", Font.PLAIN, 12));
 
@@ -91,14 +95,18 @@ public class ControlsPanel extends JPanel implements ActionListener {
 
 		// sets up the first text box for File Location
 		txtFindFile = new JTextField();
-		txtFindFile.addMouseListener(new MouseAdapter() {
+		txtFindFile.addFocusListener(new FocusAdapter() {
+			
+			
 			@Override
-			public void mouseClicked(MouseEvent e) {
+			public void focusGained(FocusEvent e) {
+
 				if (notSeenTxt1) {
 					txtFindFile.setText("");
 					notSeenTxt1 = false;
 					txt1Mod = true;
 				}
+				
 			}
 		});
 
@@ -214,21 +222,78 @@ public class ControlsPanel extends JPanel implements ActionListener {
 				txt4mod = true;
 			}
 		});
+		
+		buttonCopyStyleBrowse = new JButton("Browse");
+		buttonCopyStyleBrowse.setForeground(Color.BLACK);
+		buttonCopyStyleBrowse.setBackground(Color.LIGHT_GRAY);
+		GridBagConstraints gbc_buttonCopyStyleBrowse = new GridBagConstraints();
+		gbc_buttonCopyStyleBrowse.insets = new Insets(0, 0, 5, 5);
+		gbc_buttonCopyStyleBrowse.gridx = 0;
+		gbc_buttonCopyStyleBrowse.gridy = 4;
+		add(buttonCopyStyleBrowse, gbc_buttonCopyStyleBrowse);
+		buttonCopyStyleBrowse.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				fileLocation = txtImportIgnoreableList.getText();
+				JFileChooser chooser = new JFileChooser(fileLocation);
+				FileNameExtensionFilter filter = new FileNameExtensionFilter(
+						"*.zip Files", "zip");
+				chooser.setFileFilter(filter);
+				int returnVal = chooser.showOpenDialog(getParent());
+				if (returnVal == JFileChooser.APPROVE_OPTION)
+					fileLocation = chooser.getSelectedFile().toString();
+				txtImportIgnoreableList.setText(fileLocation);
+				txt5mod = true;
+			}
+		});
+		
+		
+		txtLessonToCopy = new JTextField();
+		txtLessonToCopy.setText("Lesson to Copy");
+		GridBagConstraints gbc_txtLessonToCopy = new GridBagConstraints();
+		gbc_txtLessonToCopy.insets = new Insets(0, 0, 5, 0);
+		gbc_txtLessonToCopy.fill = GridBagConstraints.HORIZONTAL;
+		gbc_txtLessonToCopy.gridx = 1;
+		gbc_txtLessonToCopy.gridy = 4;
+		add(txtLessonToCopy, gbc_txtLessonToCopy);
+		txtLessonToCopy.setColumns(10);
 		buttonBrowseTxt.setForeground(Color.BLACK);
 		buttonBrowseTxt.setBackground(Color.LIGHT_GRAY);
 		GridBagConstraints gbc_buttonBrowseTxt = new GridBagConstraints();
 		gbc_buttonBrowseTxt.insets = new Insets(0, 0, 5, 5);
 		gbc_buttonBrowseTxt.gridx = 0;
-		gbc_buttonBrowseTxt.gridy = 4;
+		gbc_buttonBrowseTxt.gridy = 5;
 		add(buttonBrowseTxt, gbc_buttonBrowseTxt);
-
+		txtLessonToCopy.setDropTarget(new DropTarget() {
+			@SuppressWarnings("unchecked")
+			public synchronized void drop(DropTargetDropEvent evt) {
+				try {
+					evt.acceptDrop(DnDConstants.ACTION_COPY);
+					List<File> droppedFiles = (List<File>) evt
+							.getTransferable().getTransferData(
+									DataFlavor.javaFileListFlavor);
+					txtLessonToCopy.setText(droppedFiles.get(0).toString());
+					txt5mod = true;
+				} catch (Exception ex) {
+					ex.printStackTrace();
+				}
+			}
+		});
+		txtLessonToCopy.addFocusListener(new FocusAdapter() {
+			@Override
+			public void focusGained(FocusEvent arg0) {
+				if (notSeenTxt4) {
+					txtLessonToCopy.setText("");
+					txt5mod = true;
+				}
+			}
+		});
 		txtImportIgnoreableList = new JTextField();
 		txtImportIgnoreableList.setText("Choose Ignoreable list");
 		GridBagConstraints gbc_txtImportIgnoreableList = new GridBagConstraints();
 		gbc_txtImportIgnoreableList.insets = new Insets(0, 0, 5, 0);
 		gbc_txtImportIgnoreableList.fill = GridBagConstraints.HORIZONTAL;
 		gbc_txtImportIgnoreableList.gridx = 1;
-		gbc_txtImportIgnoreableList.gridy = 4;
+		gbc_txtImportIgnoreableList.gridy = 5;
 		add(txtImportIgnoreableList, gbc_txtImportIgnoreableList);
 		txtImportIgnoreableList.setColumns(10);
 		txtImportIgnoreableList.addFocusListener(new FocusAdapter() {
@@ -265,14 +330,14 @@ public class ControlsPanel extends JPanel implements ActionListener {
 		GridBagConstraints gbc_separator = new GridBagConstraints();
 		gbc_separator.insets = new Insets(0, 0, 5, 0);
 		gbc_separator.gridx = 1;
-		gbc_separator.gridy = 5;
+		gbc_separator.gridy = 6;
 		add(separator, gbc_separator);
 
 		label = new JLabel("File Types");
 		GridBagConstraints gbc_label = new GridBagConstraints();
 		gbc_label.insets = new Insets(0, 0, 5, 5);
 		gbc_label.gridx = 0;
-		gbc_label.gridy = 6;
+		gbc_label.gridy = 7;
 		add(label, gbc_label);
 
 		checkPanel = new JPanel();
@@ -282,7 +347,7 @@ public class ControlsPanel extends JPanel implements ActionListener {
 		gbc_checkPanel.insets = new Insets(0, 0, 5, 0);
 		gbc_checkPanel.fill = GridBagConstraints.VERTICAL;
 		gbc_checkPanel.gridx = 1;
-		gbc_checkPanel.gridy = 6;
+		gbc_checkPanel.gridy = 7;
 		add(checkPanel, gbc_checkPanel);
 		GridBagLayout gbl_checkPanel = new GridBagLayout();
 		gbl_checkPanel.columnWidths = new int[] { 45, 0, 39, 0 };
@@ -325,7 +390,7 @@ public class ControlsPanel extends JPanel implements ActionListener {
 		GridBagConstraints gbc_separator_1 = new GridBagConstraints();
 		gbc_separator_1.insets = new Insets(0, 0, 5, 0);
 		gbc_separator_1.gridx = 1;
-		gbc_separator_1.gridy = 7;
+		gbc_separator_1.gridy = 8;
 		add(separator_1, gbc_separator_1);
 
 		chckbxOpenFileDirectory = new JCheckBox(
@@ -337,7 +402,7 @@ public class ControlsPanel extends JPanel implements ActionListener {
 		gbc_chckbxOpenFileDirectory.anchor = GridBagConstraints.WEST;
 		gbc_chckbxOpenFileDirectory.insets = new Insets(0, 0, 5, 0);
 		gbc_chckbxOpenFileDirectory.gridx = 1;
-		gbc_chckbxOpenFileDirectory.gridy = 8;
+		gbc_chckbxOpenFileDirectory.gridy = 9;
 		add(chckbxOpenFileDirectory, gbc_chckbxOpenFileDirectory);
 
 		chckbxIgnoreFileActive = new JCheckBox("Import Ignore File Enabled");
@@ -347,7 +412,7 @@ public class ControlsPanel extends JPanel implements ActionListener {
 		gbc_chckbxIgnoreFileActive.anchor = GridBagConstraints.WEST;
 		gbc_chckbxIgnoreFileActive.insets = new Insets(0, 0, 5, 0);
 		gbc_chckbxIgnoreFileActive.gridx = 1;
-		gbc_chckbxIgnoreFileActive.gridy = 9;
+		gbc_chckbxIgnoreFileActive.gridy = 10;
 		add(chckbxIgnoreFileActive, gbc_chckbxIgnoreFileActive);
 		chckbxIgnoreFileActive.addMouseListener(new MouseAdapter() {
 			public void mouseClicked(MouseEvent e) {
@@ -361,18 +426,28 @@ public class ControlsPanel extends JPanel implements ActionListener {
 			}
 
 		});
+		
+		chckbxCopyStyle = new JCheckBox("Copy Style Active");
+		chckbxCopyStyle.setSelected(true);
+		chckbxCopyStyle.setBackground(Color.WHITE);
+		GridBagConstraints gbc_chckbxCopyStyle = new GridBagConstraints();
+		gbc_chckbxCopyStyle.anchor = GridBagConstraints.WEST;
+		gbc_chckbxCopyStyle.insets = new Insets(0, 0, 5, 0);
+		gbc_chckbxCopyStyle.gridx = 1;
+		gbc_chckbxCopyStyle.gridy = 11;
+		add(chckbxCopyStyle, gbc_chckbxCopyStyle);
 		GridBagConstraints gbc_btnFindButton = new GridBagConstraints();
 		gbc_btnFindButton.gridwidth = 2;
 		gbc_btnFindButton.insets = new Insets(0, 0, 5, 0);
 		gbc_btnFindButton.gridx = 0;
-		gbc_btnFindButton.gridy = 10;
+		gbc_btnFindButton.gridy = 12;
 		add(btnFindButton, gbc_btnFindButton);
 		errorLabel = new JLabel("----------");
 		GridBagConstraints gbc_errorLabel = new GridBagConstraints();
 		gbc_errorLabel.gridwidth = 2;
 		gbc_errorLabel.insets = new Insets(0, 0, 5, 0);
 		gbc_errorLabel.gridx = 0;
-		gbc_errorLabel.gridy = 11;
+		gbc_errorLabel.gridy = 13;
 		add(errorLabel, gbc_errorLabel);
 
 	}
@@ -392,20 +467,14 @@ public class ControlsPanel extends JPanel implements ActionListener {
 					errorString = "No word set to replace, please write the word into the third text box";
 				else if (!txt4mod & chckbxIgnoreFileActive.isSelected())
 					errorString = "Please deselect \"Import Ignore File Enabled\", if you are not using a list.";
+				else if(!txt5mod)
+					errorString = "Please add a lesson to copy the style from or deselect \"Copy Style Acitve\"";
 				else {
 					setMap();
-					if (chckbxIgnoreFileActive.isSelected()) {
-						FindAndReplaceString advFind = new FindAndReplaceString(txtFindFile.getText(),
-								txtWordsToFind.getText(),
-								txtWordsThatReplace.getText(),
-								txtImportIgnoreableList.getText());
-						
-					} else{
-						FindAndReplaceString simpleFind = new FindAndReplaceString(txtFindFile.getText(),
-								txtWordsToFind.getText(),
-								txtWordsThatReplace.getText());
-						
-					}
+					new FindAndReplaceString(txtFindFile.getText(),
+							txtWordsToFind.getText(),
+							txtWordsThatReplace.getText(), txtImportIgnoreableList.getText() ,txtLessonToCopy.getText());
+					
 						if (chckbxOpenFileDirectory.isSelected())
 						Desktop.getDesktop()
 								.open(new File(txtFindFile.getText())
@@ -437,6 +506,10 @@ public class ControlsPanel extends JPanel implements ActionListener {
 			optionsMap.put("xml", true);
 		else
 			optionsMap.put("xml", false);
+		if (chckbxCopyStyle.isSelected())
+			optionsMap.put("convertCss", true);
+		else
+			optionsMap.put("convertCss", false);
 
 	}
 }

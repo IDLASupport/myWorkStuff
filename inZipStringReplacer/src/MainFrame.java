@@ -8,8 +8,11 @@ import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
 import java.awt.Font;
 import javax.swing.JLabel;
+
+
 import java.awt.GridBagConstraints;
 import java.awt.Color;
+import java.awt.Insets;
 /**
  * 
  * @author Nicholas McNew
@@ -43,7 +46,7 @@ public class MainFrame extends JFrame {
 		setFont(new Font("Arial", Font.PLAIN, 12));
 		setTitle("Softchalk Zip Replacer");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setBounds(100, 100, 583,359);
+		setBounds(100, 100, 666,465);
 		contentPane = new JPanel();
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		contentPane.setLayout(new BorderLayout(0, 0));
@@ -54,8 +57,9 @@ public class MainFrame extends JFrame {
 		JLabel lblVersion = new JLabel("Version "+ VERSION_NAME);
 		lblVersion.setForeground(Color.GRAY);
 		GridBagConstraints gbc_lblVersion = new GridBagConstraints();
+		gbc_lblVersion.insets = new Insets(0, 0, 5, 5);
 		gbc_lblVersion.gridx = 0;
-		gbc_lblVersion.gridy = 12;
+		gbc_lblVersion.gridy = 14;
 		myPanel.add(lblVersion, gbc_lblVersion);
 	}
 
